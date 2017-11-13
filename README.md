@@ -1,5 +1,5 @@
 # ZombieCommander
-My first finished and published app. made in 2013 as a junior in highschool so don't judge my design skills too harshly!
+My first finished and published app. made in 2013 as a junior in highschool - I promise my design skills have improved
 Not currently on the play store anymore as I have stopped supporting the game.
 
 Description from the play store: 
