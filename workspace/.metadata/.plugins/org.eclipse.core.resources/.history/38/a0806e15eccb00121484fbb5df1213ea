@@ -1,0 +1,90 @@
+package com.me.tyrian.ImageActors.Blockers;
+
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager.SoundEffects;
+import com.JustMoser.ZombieCommander.ImageActors.AbstractImage;
+import com.JustMoser.ZombieCommander.ImageActors.Brain;
+import com.JustMoser.ZombieCommander.ImageActors.HealthBar;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Rectangle;
+
+public class Blocker extends AbstractImage{
+	
+	public Rectangle body;
+	public Polygon polyBody;
+	private int health;
+	private boolean isAlive;
+	private static float fullHealth = 500;
+	private boolean isBrick = false;
+	
+	public Blocker(TextureRegion animationRegion, float x, float y) {
+		super(animationRegion);
+		this.setX(x);
+		this.setY(y);
+		body = new Rectangle(this.getX(), this.getY(), this.getWidth()*0.7f, this.getHeight()*0.7f);
+		getBlockersArray().add(this);
+		health = (int)fullHealth;
+		isAlive = true;
+		this.setOrigin(getWidth()/2, getHeight()/2);
+	}
+	
+	public Rectangle getRect()
+	{
+		if (body.getX() != this.getX())
+			body.setX(this.getX());
+		if (body.getY() != this.getY())
+			body.setY(this.getY());
+		return body;
+	}
+	
+	public Polygon getPolygon()
+	{
+		polyBody.setPosition(this.getX(), this.getY());
+		polyBody.setRotation(this.getRotation());
+		return polyBody;
+	}
+	
+	public void hurt(int damage)
+	{
+		health -= damage;
+		//health bar
+		getStage().addActor(HealthBar.create(getX(),  getY(),  (float)(health)/fullHealth, false));
+		getStage().addActor(HealthBar.createBlue(getX(),  getY(),  (float)(health)/fullHealth, true));
+		SoundManager.play(SoundEffects.BLOCKERTHUD, 0.7f);
+		if (health <= 0){
+			destroy();
+		}
+	}
+	
+	public void destroy()
+	{
+		this.getStage().addActor(Brain.create(this.getX() + this.getWidth()/2,
+				this.getY() + this.getHeight()/2, ZombieStats.getBrainsPerBlocker(), false));
+		isAlive = false;
+		getBlockersArray().removeValue(this, true);
+		this.remove();
+	}
+	
+	public boolean getAlive()
+	{
+		return isAlive;
+	}
+
+	public boolean isBrickWall() 
+	{
+		return isBrick;
+	}
+
+	public void setBrick(boolean isBrick) 
+	{
+		this.isBrick = isBrick;
+	}
+	
+	public void setHealth(int health)
+	{
+		this.health = health;
+	}
+	
+}

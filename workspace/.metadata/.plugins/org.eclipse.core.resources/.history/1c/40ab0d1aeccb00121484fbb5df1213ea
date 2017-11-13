@@ -1,0 +1,119 @@
+package com.me.tyrian.Screens.Levels;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.Audio.MusicManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.MusicManager.CustomMusic;
+import com.JustMoser.ZombieCommander.ImageActors.AbstractImage;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSelectTool;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieTarget;
+import com.JustMoser.ZombieCommander.Screens.AbstractScreen;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Scaling;
+
+public class AbstractLevel extends AbstractScreen
+{
+	private Image backgroundImage;
+	private ZombieSelectTool zSelectTool;
+	private String backgroundPath;
+	private int packId;
+	private int levelId;
+	private int gameTypeId;
+	
+    public AbstractLevel(Tyrian game, String backgroundPath, int pack, int level, int gameType)
+    {
+        super( game );
+        this.backgroundPath = backgroundPath;
+        this.packId = pack;
+        this.levelId = level;
+        this.gameTypeId = gameType;
+        AbstractImage.getZombieSpawnArray().clear();
+        AbstractImage.resetArrays();
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+
+        //Create background
+        setBackground(backgroundPath);
+        AbstractImage.setPaused(false);
+        setSelectTool();
+        
+        stage.addActor(new RoundHelper(packId, levelId, gameTypeId));
+        stage.addActor(new ZombieTarget());
+        
+        //public method for children
+        this.onShow();
+        
+        // add a fade-in effect to the whole stage
+        stage.getRoot().getColor().a = 0f;
+        stage.getRoot().addAction( Actions.fadeIn( 0.5f ) );
+        
+        //Level Music
+        if (MathUtils.random(1) == 0)
+        	MusicManager.play(CustomMusic.LEVELMUSIC1);
+        else
+        	MusicManager.play(CustomMusic.LEVELMUSIC2);
+
+    }
+    
+    public void onShow()
+    {
+    	//do stuff for children!
+    }
+    
+    /*public void addZombies()
+    {
+    	zombies = new Array<Zombie>();
+        for (int i = 0; i < 2; i++){
+        	localZombie = Zombie.create(new Vector2(Gdx.app.getGraphics().getWidth()/2 +(60*i),50+(60*i)));
+        	zombies.add(localZombie);
+        	stage.addActor(localZombie);
+        }
+    }*/
+
+    public void setSelectTool()
+    {
+    	zSelectTool = ZombieSelectTool.create(new Vector2(100,100));
+		stage.addActor(zSelectTool);
+    }
+    
+    private void setBackground(String backgroundPath)
+    {
+    	AtlasRegion splashRegion = getAtlas().findRegion( backgroundPath );
+        Drawable splashDrawable = new TextureRegionDrawable( splashRegion );
+        
+    	backgroundImage = new Image( splashDrawable, Scaling.stretch );
+        backgroundImage.setFillParent( true );
+
+        // and finally we add the actor to the stage
+        stage.addActor( backgroundImage );
+        
+      //set listeners
+        backgroundImage.addListener(new ClickListener(){
+  			public boolean touchDown(InputEvent event,float x,float y,int pointer,int button){
+  				super.touchDown( event, x, y, pointer, button );
+  				ZombieSelectTool.isTouched(x, y);
+  				return true;
+  			}
+  			public void touchDragged(InputEvent event, float x, float y, int pointer){
+  				super.touchDragged(event, x, y, pointer);
+  				ZombieSelectTool.isDragged(x, y);
+  			}
+  			public void touchUp(InputEvent event,float x,float y,int pointer,int button){
+  				super.touchUp(event, x, y, pointer, button);
+  				ZombieSelectTool.isReleased();
+  			}
+  		});
+    }
+}

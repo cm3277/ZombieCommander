@@ -1,0 +1,7 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+public interface IActivityRequestHandler {
+	
+	public void enableSignIOTableHandle();
+
+}

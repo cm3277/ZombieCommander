@@ -1,0 +1,149 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.JustMoser.ZombieCommander.Helper.UpgradeManager;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+
+public class AssassinZombie extends Zombie{
+	
+	//do class type and in zombie create stuff!
+	public static int CLASSTYPE = 5;
+	private static int startHealth = 300;
+	private static int damage = 100;
+	private boolean hasDisguised;
+	private float disguiseCounter;
+	private float disguiseTime = 3.5f;
+	private static float disguiseStartTime = 3.5f;
+	private boolean customUpgrade;
+	static int speed = 50;
+	//animation
+	private static Array<AtlasRegion> zombieRegions;
+	private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+	private static Animation walkAnimation;
+	private static Array<AtlasRegion> disguiseRegions;
+	private static Map<TextureRegion,Drawable> disguiseAnimDrawables;
+	private static Animation disguiseAnimation;
+
+	public AssassinZombie(Array<AtlasRegion> animationRegions, float x, float y) {
+		super(animationRegions, x, y);
+		setClassType(CLASSTYPE);
+		setHealth(startHealth);
+		//Keep same as reg zombie setSpeed(MathUtils.random(25, 35));
+		setDamage(damage);
+		hasDisguised = false;
+		customUpgrade = false;
+	}
+	
+	public static AssassinZombie create(float x, float y)
+    {
+		if (zombieRegions == null) {
+			zombieRegions = getZombieAtlas().findRegions( "Assassin");
+		}
+		if (walkAnimation == null) {
+			walkAnimation = new Animation( 0.3f, zombieRegions );
+		}
+		if (zombieAnimDrawables == null) {
+    		zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieRegions ) {
+    			zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+		if (disguiseRegions == null) {
+			disguiseRegions = getZombieAtlas().findRegions( "AssassinDisguise");
+		}
+		if (disguiseAnimation == null) {
+			disguiseAnimation = new Animation( 0.3f, disguiseRegions );
+		}
+		if (disguiseAnimDrawables == null) {
+			disguiseAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : disguiseRegions ) {
+    			disguiseAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+
+        // create the ship
+		return new AssassinZombie(zombieRegions, x, y);
+    }
+	
+	@Override
+	public void animateZombie(float delta)
+	{
+		//custom upgrades
+		if (!customUpgrade){
+			this.disguiseTime = UpgradeManager.getUpgradedCustom(CLASSTYPE, this.disguiseTime);
+			customUpgrade = true;
+		}
+		TextureRegion frame;
+		if (getDisguised()){
+			disguiseCounter += delta;
+			if (disguiseCounter >= disguiseTime)
+				setDisguised(false);
+			frame = disguiseAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(disguiseAnimDrawables.get(frame));
+		}
+		else{
+			frame = walkAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(zombieAnimDrawables.get(frame));
+		}
+	}
+	
+	@Override
+	public void hurt(int damage)
+	{
+		if (this.getAlive()){
+			//blood splatter 
+			getStage().addActor(Blood.create(getX(),  getY(),  getRotation()));
+			setHealth(getHealth() - damage);
+			if (getHealth() <= 0){
+				createDeadBody();
+				destroy();
+			}
+			else if (!hasDisguised){
+				setDisguised(true);
+				hasDisguised = true;
+				disguiseCounter = 0f;
+				//do disguise
+			}
+		}
+	}
+	
+	@Override
+	public void createDeadBody()
+	{
+		getStage().addActor(DeadBody.create(CLASSTYPE, getX(), getY(), getRotation()));
+	}
+	
+	public static int getStartHealth()
+	{
+		return startHealth;
+	}
+	
+	public static int getDamage()
+	{
+		return damage;
+	}
+	
+	public static int getSpeed()
+	{
+		return speed;
+	}
+
+	public static float getDisguiseStartTime() 
+	{
+		return disguiseStartTime;
+	}
+	
+	/*public static float getDisguiseTime()
+	{
+		return disguiseTime;
+	}*/
+	
+
+}

@@ -1,0 +1,304 @@
+
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Blocker;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Chest;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Sandbag;
+import com.JustMoser.ZombieCommander.Screens.AbstractScreen;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Array;
+
+public abstract class AbstractImage extends Image {
+    
+    private static boolean isPaused = false;
+    private static Skin skin;
+    private static Stage staticStage;
+    
+    //Zombie 
+    private static TextureAtlas zombieAtlas;
+    private static Array<Zombie> zombiesArray;
+    private static Array<Zombie> zombiesNeedTargetArray;
+    
+    //background
+    private static TextureAtlas gameAtlas;
+    private static TextureRegion menuBackgroundRegion;
+    
+    //Humans
+    private static Array<Human> humansArray;
+    
+    //Blockers
+    private static Array<Blocker> blockersArray;
+    
+    //brains
+    private static Array<Brain> brainArray;
+    
+    //spawns
+    private static Array<ZombieSpawn> zombieSpawnArray;
+    
+    //fog
+    private static Array<Fog> fogArray;
+    
+    //flag
+    private static Flag flag;
+    
+    //flagStand
+    private static FlagStand zombieFlagStand;
+   
+
+    public AbstractImage()
+    {
+    	//super();
+        //this.game = game;
+        
+    }
+
+    public AbstractImage(TextureRegion firstRegion )
+    {
+    	super(firstRegion);
+        //this.game = game;
+    }
+    
+    public static void loadAssets()
+    {
+        zombieAtlas = new TextureAtlas( Gdx.files.internal( "zombies/zombieTextures.pack" ) );
+        gameAtlas = new TextureAtlas( Gdx.files.internal( "gameTextures.pack" ) );
+ 		menuBackgroundRegion = getGameAtlas().findRegion( "MenuBackground" );
+        FileHandle skinFile = Gdx.files.internal( "uiskin.json" );
+        skin = new Skin( skinFile );
+        AbstractScreen.loadAssets();
+        Zombie.loadAssets();
+        Arrow.loadAssets();
+        AssassinZombie.loadAssets();
+        BangerZombie.loadAssets();
+        BatZombie.loadAssets();
+        Blood.loadAssets();
+        Brain.loadAssets();
+        BrokenChest.loadAssets();
+        Bullet.loadAssets();
+        DeadBody.loadAssets();
+        Explosion.loadAssets();
+        Flag.loadAssets();
+        FlagStand.loadAssets();
+        Fog.loadAssets();
+        HealWitchZombie.loadAssets();
+        HealthBar.loadAssets();
+        Human.loadAssets();
+        HumanTeleporter.loadAssets();
+        HunterZombie.loadAssets();
+        MachineGunHuman.loadAssets();
+        MeatHeadZombie.loadAssets();
+        MiniSpider.loadAssets();
+        RiderZombie.loadAssets();
+        SniperHuman.loadAssets();
+        SpawnMenu.loadAssets();
+        SpiderZombie.loadAssets();
+        WitchHealCircle.loadAssets();
+        ZombieSelectTool.loadAssets();
+        ZombieTarget.loadAssets();
+        BrickWall.loadAssets();
+        Chest.loadAssets();
+        Sandbag.loadAssets();
+        ZombieSpawn.loadAssets();
+        ZTypeMiniScreen.loadAssets();
+        ZombieCustomUpgrade.loadAssets();
+        RoundHelper.loadAssets();
+        //Sandbag.loadAssets();
+    }
+    
+    public static TextureAtlas getZombieAtlas()
+    {
+        //if( zombieAtlas == null ) {
+        //	zombieAtlas = new TextureAtlas( Gdx.files.internal( "zombies/zombieTextures.pack" ) );
+        //	Gdx.app.log( Tyrian.LOG, "Zombie Textures Loaded!!!!" );
+        //}
+        return zombieAtlas;
+    }
+    
+    public static void nullStatics()
+    {
+    	zombieAtlas = null;
+    	gameAtlas = null;
+    }
+    
+    public static TextureAtlas getGameAtlas()
+    {
+        //if( gameAtlas == null ) {
+        //	gameAtlas = new TextureAtlas( Gdx.files.internal( "gameTextures.pack" ) );
+        	//dx.app.log( Tyrian.LOG, "Zombie Textures Loaded" );
+       // }
+        return gameAtlas;
+    }
+    
+    public static TextureRegion getMenuBackgroundRegion()
+    {
+ 		
+    	return menuBackgroundRegion;
+    }
+    
+    public static Array<Fog> getFogArray()
+    {
+    	if (fogArray == null) {
+    		fogArray = new Array<Fog>();
+    	}
+    	return fogArray;
+    }
+    
+    public static Array<Zombie> getZombieArray()
+    {
+    	if (zombiesArray == null) {
+    		zombiesArray = new Array<Zombie>();
+    		zombiesArray.ordered = true;
+    	}
+    	return zombiesArray;
+    }
+    
+    public static Array<Brain> getBrainArray()
+    {
+    	if (brainArray == null) {
+    		brainArray = new Array<Brain>();
+    	}
+    	return brainArray;
+    }
+    
+    public static Array<ZombieSpawn> getZombieSpawnArray()
+    {
+    	if (zombieSpawnArray == null) {
+    		zombieSpawnArray = new Array<ZombieSpawn>();
+    	}
+    	return zombieSpawnArray;
+    }
+    
+    public static Array<Zombie> getZombieNeedTargetArray()
+    {
+    	if (zombiesNeedTargetArray == null) {
+    		zombiesNeedTargetArray = new Array<Zombie>();
+    	}
+    	return zombiesNeedTargetArray;
+    }
+    
+    public static Array<Human> getHumanArray()
+    {
+    	if (humansArray == null) {
+    		humansArray = new Array<Human>();
+    		humansArray.ordered = true;
+    	}
+    	return humansArray;
+    }
+    
+    public static Array<Blocker> getBlockersArray()
+    {
+    	if (blockersArray == null) {
+    		blockersArray = new Array<Blocker>();
+    		blockersArray.ordered = true;
+    	}
+    	return blockersArray;
+    }
+    
+    public static Skin setSkin(FileHandle skinFile)
+    {
+    	if (skin == null)
+    	skin = new Skin(skinFile);
+    	return skin;
+    }
+    
+    public static Skin getSkin()
+    {
+    	return AbstractImage.skin;
+    }
+    
+    public static boolean getPaused()
+    {
+    	return isPaused;
+    }
+    
+    public static void setPaused(boolean paused)
+    {
+    	isPaused = paused;
+    	ZombieSelectTool.resetUnPausedCounter();
+    }
+    
+    @Override
+    public void act(float delta )
+    {
+    	super.act( delta );
+        if (!getPaused())
+        {
+        	publicAct(delta);
+        	//spawn zombies with interval
+        }
+        else
+        {
+        	isPausedAct(delta);
+        }
+    }
+    
+    public void isPausedAct(float delta)
+    {
+    	//Override method for children who need to act while paused
+    }
+    
+    public void publicAct(float delta)
+    {
+    	//Override method for children to comply with isPaused
+    }
+    
+    public float calcAngle(float x1, float y1, float x2, float y2)
+    {
+        float _angle = (float)(Math.atan2(Math.abs(x2-x1), Math.abs(y2-y1)) * (180/Math.PI));
+        //= (float)Math.toDegrees(Math.atan2(y2-y1, x2-x1));
+        if (y1 > y2)
+        	_angle = 180 - _angle;
+        if (x2 < x1)
+        	_angle = -_angle;
+        return _angle;
+    }
+    
+    public static void setStaticstage(Stage stage)
+    {
+    	staticStage = stage;
+    }
+    
+    public static Stage getStaticStage()
+    {
+    	return staticStage;
+    }
+    
+    public static void resetArrays()
+    {
+    	getZombieArray().clear();
+    	getZombieNeedTargetArray().clear();
+    	getHumanArray().clear();
+    	getBlockersArray().clear();
+    	getBrainArray().clear();
+    	getZombieSpawnArray().clear();
+    	getFogArray().clear();
+    }
+
+	public static Flag getFlag() 
+	{
+		return flag;
+	}
+
+	public static void setFlag(Flag flag) 
+	{
+		AbstractImage.flag = flag;
+	}
+
+	public static FlagStand getZombieFlagStand() 
+	{
+		return zombieFlagStand;
+	}
+
+	public static void setZombieFlagStand(FlagStand flagStand) 
+	{
+		AbstractImage.zombieFlagStand = flagStand;
+	}
+}

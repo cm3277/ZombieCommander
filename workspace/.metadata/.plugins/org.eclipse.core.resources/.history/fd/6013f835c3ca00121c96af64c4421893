@@ -1,0 +1,258 @@
+package com.me.tyrian.Tutorial;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.delay;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.me.tyrian.Helper.LevelManager;
+import com.me.tyrian.ImageActors.AbstractImage;
+import com.me.tyrian.ImageActors.DialogBox;
+import com.me.tyrian.ImageActors.ZombieTarget;
+import com.me.tyrian.Screens.Levels.Slayer.Pack1.Level1Screen;
+
+public class SlayerTutorial extends Actor{
+	
+	private int tutorialLevel;
+	private DialogBox dialogBox;
+	private Label lblHumanHint;
+	private Label lblInfoHint;
+	private Label lblSpawnHint;
+	private Label lblSandbagHint;
+	private Label lblBrickWall;
+	private boolean nextTutStep;
+	
+	public SlayerTutorial()
+	{
+		tutorialLevel = 0;
+	}
+	
+	@Override
+	public void act(float delta)
+	{
+		if (!AbstractImage.getPaused()){
+			if (tutorialLevel == 0){
+				doTut0();
+			}
+			else if (tutorialLevel == 1){
+				doTut1();
+			}
+			else if (tutorialLevel == 2){
+				doTut2();
+			}
+			else if (tutorialLevel == 3){
+				doTut3();
+			}
+			else if (tutorialLevel == 4){
+				doTut4();
+			}
+			else if (tutorialLevel == 5){
+				doTut5();
+			}
+			else if (tutorialLevel == 6){
+				doTut6();
+			}
+			else if (tutorialLevel == 7){
+				doTut7();
+			}
+			else if (tutorialLevel == 8){
+				doTut8();
+			}
+			else {
+				doEndTut();
+			}
+		}
+	}
+	
+	private void nextStep()
+	{
+		tutorialLevel++;
+		nextTutStep = false;
+	}
+	
+	private void doTut0()
+	{
+		if (dialogBox == null){
+			dialogBox = new DialogBox(Gdx.app.getGraphics().getWidth()/2,Gdx.app.getGraphics().getHeight()/2,"Welcome! As the commander of an elite army of Zombies" +
+					" your Job is directing them to kill all humans and collect brains.");
+			this.getStage().addActor(dialogBox);
+			lblHumanHint = new Label("Human", AbstractImage.getSkin());
+			lblHumanHint.setColor(Color.RED);
+			if (Level1Screen.getHuman() != null)
+				lblHumanHint.setPosition(Level1Screen.getHuman().getX() - lblHumanHint.getWidth()/2, Level1Screen.getHuman().getY() - lblHumanHint.getHeight()/2);
+			lblHumanHint.addAction(getRepeatFade());
+			this.getStage().addActor(lblHumanHint);
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut1()
+	{
+		if (nextTutStep == false){
+			dialogBox.setText("You get better bonuses for killing humans in the least amount of rounds!");
+			this.getStage().addActor(dialogBox);
+			
+			nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut2()
+	{
+		if (nextTutStep == false){
+			dialogBox.setText("The top bar shows the round, how many zombies you have left to spawn this round, and amount of brains(currency)");
+			this.getStage().addActor(dialogBox);
+			lblInfoHint = new Label("Information bar", AbstractImage.getSkin());
+			lblInfoHint.setColor(Color.RED);
+			lblInfoHint.setPosition(Gdx.app.getGraphics().getWidth()/2 - lblInfoHint.getWidth()/2, Gdx.app.getGraphics().getHeight()*0.92f);
+			lblInfoHint.addAction(getRepeatFade());
+			this.getStage().addActor(lblInfoHint);
+			nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			lblInfoHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut3()
+	{
+		if (nextTutStep == false){
+			dialogBox.setText("Tap on the Zombie Spawn to choose a type and how many zombies to spawn. Then order zombies to attack by giving them targets.");
+			this.getStage().addActor(dialogBox);
+			lblSpawnHint = new Label("Spawn", AbstractImage.getSkin());
+			lblSpawnHint.setColor(Color.RED);
+			lblSpawnHint.setPosition(Level1Screen.getZombieSpawn().getX() - lblSpawnHint.getWidth()/2, Level1Screen.getZombieSpawn().getY() + Level1Screen.getZombieSpawn().getHeight());
+			lblSpawnHint.addAction(getRepeatFade());
+			this.getStage().addActor(lblSpawnHint);
+			nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut4()
+	{
+		if (nextTutStep == false){
+			if (AbstractImage.getZombieArray().size > 0){
+				dialogBox.setPosition(Gdx.app.getGraphics().getWidth()/2,Gdx.app.getGraphics().getHeight()*0.65f);
+				dialogBox.setText("Hint: Those sandBags get in the way! You can order zombies to attack and destroy them before the Humans!");
+				this.getStage().addActor(dialogBox);
+				lblSpawnHint.remove();
+				lblSandbagHint = new Label("Sandbag", AbstractImage.getSkin());
+				lblSandbagHint.setColor(Color.RED);
+				lblSandbagHint.setPosition(Level1Screen.getSandbag().getX() - lblSandbagHint.getWidth()/2, Level1Screen.getSandbag().getY() - lblSandbagHint.getHeight()/2);
+				lblSandbagHint.addAction(getRepeatFade());
+				this.getStage().addActor(lblSandbagHint);
+				nextTutStep = true;
+			}
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut5()
+	{
+		if (nextTutStep == false){
+			if (AbstractImage.getZombieArray().size > 0){
+				dialogBox.setPosition(Gdx.app.getGraphics().getWidth()/2,Gdx.app.getGraphics().getHeight()*0.65f);
+				dialogBox.setText("Hint: Brick walls can not be destroyed by zombies, but they do block bullets!");
+				this.getStage().addActor(dialogBox);
+				lblBrickWall = new Label("Brick Wall", AbstractImage.getSkin());
+				lblBrickWall.setColor(Color.RED);
+				lblBrickWall.setPosition(Level1Screen.getBrickWall().getX() - lblBrickWall.getWidth()/2, Level1Screen.getBrickWall().getY() - lblBrickWall.getHeight()/2);
+				lblBrickWall.addAction(getRepeatFade());
+				this.getStage().addActor(lblBrickWall);
+				nextTutStep = true;
+			}
+		}
+		else if (!dialogBox.getActive()){
+			lblBrickWall.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut6()
+	{
+		if (nextTutStep == false){
+				dialogBox.setText("Hint: Drag the screen to highlight zombies and give them new targets at any time!");
+				this.getStage().addActor(dialogBox);
+				nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut7()
+	{
+		if (nextTutStep == false){
+			if (ZombieTarget.getSelectTextImage().isVisible()){
+				dialogBox.setText("After highlighting Zombies Tap anywhere to set only one target without pausing(Quick Targeting).");
+				this.getStage().addActor(dialogBox);
+				nextTutStep = true;
+			}
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut8()
+	{
+		if (nextTutStep == false){
+				dialogBox.setText("Or After highlighting Zombies tap the box in the upper Left corner to pause and select multiple targets at once(Precise Targeting).");
+				this.getStage().addActor(dialogBox);
+				nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doEndTut()
+	{
+		if (nextTutStep == false){
+			if (AbstractImage.getBrainArray().size > 0){
+				dialogBox.setText("Hurry and tap on your brains to collect them! They will disappear if you don't!");
+				this.getStage().addActor(dialogBox);
+				nextTutStep = true;
+				LevelManager.setTutorialFinished(LevelManager.getSlayer());
+			}
+		}
+		if (AbstractImage.getHumanArray().size == 0){
+			lblHumanHint.remove();
+		}
+		if (AbstractImage.getBlockersArray().size == 1){
+			lblSandbagHint.remove();
+		}
+	}
+	
+	private Action getRepeatFade()
+	{
+		RepeatAction fade = new RepeatAction();
+		fade.setCount(-1);
+		fade.setAction(sequence( fadeIn( 0.5f ), delay( 1f ), fadeOut( 0.5f )));
+		return fade;
+	}
+
+}

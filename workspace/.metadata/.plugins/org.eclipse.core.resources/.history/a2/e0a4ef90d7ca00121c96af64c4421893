@@ -1,0 +1,109 @@
+package com.me.tyrian.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+import com.me.tyrian.Helper.Audio.SoundManager;
+import com.me.tyrian.Helper.Audio.SoundManager.SoundEffects;
+import com.me.tyrian.ImageActors.Blockers.Blocker;
+
+public class BangerZombie extends Zombie{
+	
+	//do class type and in zombie create stuff!
+	public static int CLASSTYPE = 4;
+	private static int startHealth = 200;
+	private static int damage = 250;
+	private static int speed = 85;
+	//animation
+	private static Array<AtlasRegion> zombieRegions;
+	private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+	private static Animation walkAnimation;
+
+	public BangerZombie(Array<AtlasRegion> animationRegions, float x, float y) {
+		super(animationRegions, x, y);
+		setClassType(CLASSTYPE);
+		setHealth(startHealth);
+		setSpeed(MathUtils.random(70, 100));
+		setDamage(damage);
+	}
+	
+	public static BangerZombie create(float x, float y)
+    {
+		if (zombieRegions == null) {
+			zombieRegions = getZombieAtlas().findRegions( "BangerWalk");
+		}
+		if (walkAnimation == null) {
+			walkAnimation = new Animation( 0.15f, zombieRegions );
+		}
+		if (zombieAnimDrawables == null) {
+    		zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieRegions ) {
+    			zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+
+        // create the ship
+		return new BangerZombie(zombieRegions, x, y);
+    }
+	
+	@Override
+	public void animateZombie(float delta)
+	{
+		TextureRegion frame;
+			frame = walkAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(zombieAnimDrawables.get(frame));
+	}
+	
+	@Override
+	public void createDeadBody()
+	{
+		SoundManager.play(SoundEffects.EXPLOSION, 0.9f);
+		getStage().addActor(Explosion.create(this.getX() + this.getWidth(), this.getY() + this.getHeight(), this.getRotation()));
+		explosionDamage();
+	}
+	
+	@Override
+	public void damage(boolean human, int identifier)
+	{
+		createDeadBody();
+		destroy();
+	}
+	
+	private void explosionDamage()
+	{
+		for (Human human: getHumanArray()){
+			if (this.getRect().overlaps(human.getRect())){
+				human.hurt(damage);
+			}
+		}
+		for (Blocker blocker: getBlockersArray()){
+			if (this.getRect().overlaps(blocker.getRect())){
+				blocker.hurt(damage);
+			}
+		}
+	}
+	
+	public static int getStartHealth()
+	{
+		return startHealth;
+	}
+	
+	public static int getDamage()
+	{
+		return damage;
+	}
+	
+	public static int getSpeed()
+	{
+		return speed;
+	}
+	
+
+}

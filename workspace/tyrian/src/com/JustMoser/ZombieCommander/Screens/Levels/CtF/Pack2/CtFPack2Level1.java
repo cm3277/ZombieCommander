@@ -1,0 +1,60 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.CtF.Pack2;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.Flag;
+import com.JustMoser.ZombieCommander.ImageActors.FlagStand;
+import com.JustMoser.ZombieCommander.ImageActors.HumanTeleporter;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.badlogic.gdx.math.Vector2;
+
+public class CtFPack2Level1 extends CtFPack2Level
+{
+	private ZombieSpawn zombieSpawn;
+	//private Human localHuman;
+	
+    public CtFPack2Level1(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(1));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+        addFlags();
+    }
+    
+    private void addHumans()
+    {
+    	stage.addActor(HumanTeleporter.create(stage.getWidth()*0.8f, stage.getHeight()*0.8f));
+    	stage.addActor(HumanTeleporter.createMachineGunner(stage.getWidth()*0.85f, stage.getHeight()*0.6f));
+    }
+    
+    public void addSpawns()
+    {
+    	zombieSpawn = ZombieSpawn.create(new Vector2(stage.getWidth()*0.02f,stage.getHeight()*0.15f));
+        stage.addActor(zombieSpawn);
+        //stage.addActor(ZombieSpawn.create(new Vector2(stage.getWidth()*0.2f,stage.getHeight()*0.95f)));
+    }
+   
+    private void addBlockers()
+    {
+    	BrickWall brickWall = BrickWall.create(0, 0);
+        brickWall.setPosition(stage.getWidth() - brickWall.getWidth(), stage.getHeight()*0.5f);
+    	stage.addActor(brickWall);
+    	stage.addActor(BrickWall.create(brickWall.getX() - brickWall.getWidth(), brickWall.getY()));
+    }
+    
+    private void addFlags()
+    {
+    	FlagStand flagStand = FlagStand.createHumanStand(stage.getWidth()*0.85f, stage.getHeight()*0.85f);
+    	stage.addActor(flagStand);
+    	Flag flag = Flag.create(flagStand.getX() + flagStand.getWidth()/2, flagStand.getY() + flagStand.getHeight()/2);
+    	stage.addActor(flag);
+    	stage.addActor(FlagStand.createZombieStand(stage.getWidth()*0.82f, stage.getHeight()*0.15f));
+    }
+}

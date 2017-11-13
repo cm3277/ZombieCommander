@@ -1,0 +1,54 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.SnD.Pack1;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.SniperHuman;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Chest;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+
+public class SnDPack1Level2 extends SnDLevel
+{
+	private ZombieSpawn zombieSpawn;
+	//private Human localHuman;
+	private Chest chest;
+	
+    public SnDPack1Level2(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(2));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+        super.addFog();
+    }
+    
+    private void addHumans()
+    {
+    	//localHuman = Human.create(480*0.8f, Gdx.app.getGraphics().getHeight()*0.8f);
+        //stage.addActor(localHuman);
+        stage.addActor(SniperHuman.create(480*0.7f, Gdx.app.getGraphics().getHeight()*0.8f));
+    }
+    
+    public void addSpawns()
+    {
+    	zombieSpawn = ZombieSpawn.create(new Vector2(480*0.1f, Gdx.app.getGraphics().getHeight()*0.1f));
+        stage.addActor(zombieSpawn);
+        //stage.addActor(ZombieSpawn.create(new Vector2(480*0.2f,Gdx.app.getGraphics().getHeight()*0.95f)));
+    }
+   
+    private void addBlockers()
+    {
+    	chest = Chest.create(480*0.9f, Gdx.app.getGraphics().getHeight()*0.9f );
+        stage.addActor(chest);
+        BrickWall brickWall = BrickWall.create(480*0.3f, Gdx.app.getGraphics().getHeight()*0.3f );
+        brickWall.setRotation(-45);
+        stage.addActor(brickWall);
+    }
+}

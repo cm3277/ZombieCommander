@@ -1,0 +1,68 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.Slayer.Pack1;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.Human;
+import com.JustMoser.ZombieCommander.ImageActors.MachineGunHuman;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Sandbag;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+
+public class Level4Screen extends World1Level
+{
+    public Level4Screen(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(4));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+    }
+    
+    private void addHumans()
+    {
+    	Human localHuman2 = Human.create(Gdx.app.getGraphics().getWidth()*0.7f, Gdx.app.getGraphics().getHeight()*0.5f);
+    	stage.addActor(localHuman2);
+    	Human localHuman = Human.create(Gdx.app.getGraphics().getWidth()*0.3f - localHuman2.getWidth(), Gdx.app.getGraphics().getHeight()*0.5f);
+    	stage.addActor(localHuman);
+    	Human localHuman3 = MachineGunHuman.create(Gdx.app.getGraphics().getWidth()*0.5f - localHuman2.getWidth()/2, Gdx.app.getGraphics().getHeight()*0.75f);
+    	stage.addActor(localHuman3);
+    }
+    
+    public void addSpawns()
+    {
+    	ZombieSpawn zombieSpawn = ZombieSpawn.create(new Vector2(Gdx.app.getGraphics().getWidth()*0.8f,Gdx.app.getGraphics().getHeight()*0.1f));
+        stage.addActor(zombieSpawn);
+        stage.addActor(ZombieSpawn.create(new Vector2(Gdx.app.getGraphics().getWidth()*0.2f - zombieSpawn.getWidth(),Gdx.app.getGraphics().getHeight()*0.1f)));
+        //stage.addActor(ZombieSpawn.create(new Vector2(Gdx.app.getGraphics().getWidth()*0.2f,Gdx.app.getGraphics().getHeight()*0.95f)));
+    }
+    
+    private void addBlockers()
+    {
+    	for (int i = 0; i < 9; i++){
+    		if (i == 4){
+    			stage.addActor(Sandbag.create((Gdx.app.getGraphics().getWidth()*0.04f + (50*i)) , Gdx.app.getGraphics().getHeight()*0.42f));
+    			i = 5;
+    		}
+    		else
+    			stage.addActor(Sandbag.create((Gdx.app.getGraphics().getWidth()*0.04f + (50*i)) , Gdx.app.getGraphics().getHeight()*0.35f));
+    		if (i == 2)
+    			i = 3;
+    	}
+    	BrickWall brickWall = BrickWall.create(Gdx.app.getGraphics().getWidth()*0.7f , Gdx.app.getGraphics().getHeight()*0.3f);
+    	brickWall.setRotation(45);
+    	stage.addActor(brickWall);
+    	
+    	BrickWall brickWall2 = BrickWall.create(Gdx.app.getGraphics().getWidth()*0.15f , Gdx.app.getGraphics().getHeight()*0.3f);
+    	brickWall2.setRotation(-45);
+    	stage.addActor(brickWall2);
+    	
+    	stage.addActor(BrickWall.create(Gdx.app.getGraphics().getWidth()*0.5f - brickWall2.getWidth()/2, Gdx.app.getGraphics().getHeight()*0.5f));
+    }
+}

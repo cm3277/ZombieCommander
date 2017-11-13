@@ -1,0 +1,576 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.delay;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+
+import com.JustMoser.ZombieCommander.Helper.ProfileManager;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
+
+public class ZombieTarget extends AbstractImage{
+	
+	private static boolean bTargetsFinished;
+    private static boolean bTargetSelected = true;
+    private static TextureRegion targetRegion;
+    private static Array<Vector2> targetArray;
+    private static Array<Vector2> spawningTargetArray;
+    private static boolean isSpawnTarget = false;
+    private static Array<Image> targetImageArray;
+    private static Array<Label> targetLabelArray;
+    private static Table bottomTable;
+    private static Table quickTargetTable;
+    private static Rectangle buttonRectangle;
+    private static Rectangle selectTextRectangle;
+    private static Rectangle quickCancelRectangle;
+    private static float touchTimer = 0f;
+    private static float touchDelay = 0.4f;
+    //Zombie Target Select
+    private static Image target;
+    private static Label targetLabel;
+    private static Image selectText;
+    private static Button okButton;
+    private static Button undoButton;
+    private static Button cancelButton;
+    private static Button quickTargetCancelButton;
+    private static boolean targetImageRemoved = false;
+    private static boolean justTouched;
+    private static ZombieSpawn zombieSpawn;
+    private static int targetNum;
+    private static boolean quickTargetEnabled = false;
+	
+	public ZombieTarget()
+	{
+		super();
+		setTargetsFinished(false);
+		targetArray = new Array<Vector2>();
+		targetArray.ordered = true;
+		spawningTargetArray = new Array<Vector2>();
+		spawningTargetArray.ordered = true;
+		targetImageArray = new Array<Image>();
+		targetImageArray.ordered = true;
+		targetLabelArray = new Array<Label>();
+		targetLabelArray.ordered = true;
+		justTouched = false;
+		targetNum = 1;
+	}
+	
+	@Override
+	public void isPausedAct(float delta)
+    {
+		if (!bTargetSelected)
+    	{
+			if (touchTimer <= touchDelay)
+				touchTimer += delta;
+			else{
+				setTarget();
+				justTouched = false;
+			}
+    	}
+		if (bTargetsFinished){
+			if (!isSpawnTarget){
+				setArrays();
+				targetArray.clear();
+			}
+			else{
+				isSpawnTarget = false;
+				if (zombieSpawn != null){
+	    			zombieSpawn.onTargetsSet();
+	    		}
+			}
+			targetsFade(true);
+			bTargetsFinished = false;
+			targetNum = 1;
+			setPaused(false);
+		}
+    }
+	
+	@Override
+	public void publicAct(float delta)
+    {
+		if (quickTargetEnabled){
+			if (justTouched)
+				justTouched = false;
+			if (setTarget()){
+				quickTargetEnabled = false;
+				getSelectTextImage().setVisible(false);
+	    		//get selected zombies + add to array
+	    		for (Zombie z1 : getZombieArray()){
+	    			if (z1.getSelected()){
+	    				getZombieNeedTargetArray().add(z1);
+	    				z1.deSelectZombie();
+	    			}
+	    		}
+	    		ZombieSelectTool.resetSelectedZombiesNum();
+				setArrays();
+				targetsFade(true);
+				targetNum = 1;
+				bTargetsFinished = false;
+				getQuickTargetTable().setVisible(false);
+		    	getQuickTargetTable().addAction(fadeOut(0));
+			}
+		}
+    }
+	
+	private static void setArrays()
+	{
+		for(Zombie z : getZombieNeedTargetArray()){
+			//getTargetImage().g finish iterating through
+			z.setTargetArray(targetArray);
+			if (!getZombieArray().contains(z, true))
+				getZombieArray().add(z);
+		}
+		getZombieNeedTargetArray().removeAll(getZombieArray(), true);
+	}
+	
+	private static boolean setTarget()
+    {
+    	if (Gdx.input.isTouched())
+    	{
+    		if (!justTouched && !checkButtons(Gdx.input.getX(), Gdx.app.getGraphics().getHeight() - Gdx.input.getY())){
+    			justTouched = true;
+    			touchTimer = 0f;
+    			if (quickTargetEnabled){
+    				targetArray.clear();
+    				targetNum = 1;
+    			}
+	    		//getTargetImage().setPosition((Gdx.input.getX() - getTargetImage().getImageWidth()/2), (Gdx.app.getGraphics().getHeight() - Gdx.input.getY())- getTargetImage().getHeight()/2);
+	    		getTargetImage().setVisible(false);
+	    		Image thisTarget = new Image(getTargetRegion());
+	    		thisTarget.setPosition((Gdx.input.getX() - getTargetImage().getImageWidth()/2), (Gdx.app.getGraphics().getHeight() - Gdx.input.getY())- getTargetImage().getHeight()/2);
+	    		getStaticStage().addActor(thisTarget);
+	    		targetImageArray.add(thisTarget);
+	    		Label lblTargetNum = new Label("" + targetNum, getSkin());
+	    		lblTargetNum.setColor(Color.BLACK);
+	    		lblTargetNum.setPosition(thisTarget.getX(), thisTarget.getY());
+	    		getStaticStage().addActor(lblTargetNum);
+	    		targetLabelArray.add(lblTargetNum);
+	    		targetNum++;
+	    		if (isSpawnTarget){
+	    			spawningTargetArray.add(new Vector2(thisTarget.getX(), thisTarget.getY()));
+	    		}
+	    		else{
+	    			targetArray.add(new Vector2(thisTarget.getX(), thisTarget.getY()));
+	    		}
+	    		return true;
+    		}
+    		else
+    			return false;
+    	}
+    	else 
+    		return false;
+    }
+	
+	private static TextureRegion getTargetRegion()
+	{
+		if (targetRegion == null){
+			targetRegion = getZombieAtlas().findRegion("Target");
+		}
+		return targetRegion;
+	}
+	
+	public static Image getTargetImage()
+    {
+    	if (target == null) {
+    		target = new Image(getTargetRegion());
+    		target.setVisible(false);
+    		target.setPosition(Gdx.app.getGraphics().getWidth()/2 - 50/2, Gdx.app.getGraphics().getHeight()/2 - target.getHeight()/2);
+    		target.addAction(getRepeatFade());
+    	}
+    	if (!getStaticStage().getActors().contains(target, true)){
+			getStaticStage().addActor(target);
+		}
+    	return target;
+    }
+    
+	public static Image getSelectTextImage()
+    {
+    	if (selectText == null) {
+    		TextureRegion selectTextRegion = getZombieAtlas().findRegion("SelectText");
+    		selectText = new Image(selectTextRegion);
+    		selectText.setVisible(false);
+    		selectText.addAction(fadeOut(0f));
+    		selectText.setPosition(Gdx.app.getGraphics().getWidth()*0.04f, Gdx.app.getGraphics().getHeight()*0.95f - selectText.getHeight());
+    		selectText.addAction(getRepeatFade());
+    		//set listeners
+    		selectText.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    onSelectTextClicked();
+                }
+        	});
+    	}
+    	if (!getStaticStage().getActors().contains(selectText, true)){
+			getStaticStage().addActor(selectText);
+		}
+    	return selectText;
+    }
+    
+    private static void onSelectTextClicked()
+    {
+    	if (!getPaused()){
+    		getSelectTextImage().setVisible(false);
+    		setPaused(true);
+    		//get selected zombies + add to array
+    		for (Zombie z1 : getZombieArray()){
+    			if (z1.getSelected()){
+    				getZombieNeedTargetArray().add(z1);
+    				z1.deSelectZombie();
+    			}
+    		}
+    		ZombieSelectTool.resetSelectedZombiesNum();
+    		getTargetLabel().setVisible(true);
+    		getTargetLabel().toFront();
+        	getTargetImage().setVisible(true);
+        	getTargetImage().toFront();
+        	getBottomTable().toFront();
+        	targetsFade(false);
+        	bTargetSelected = false;
+        	targetArray.clear();
+        	isSpawnTarget = false;
+        	targetNum = 1;
+        	quickTargetEnabled = false;
+        	getQuickTargetTable().setVisible(false);
+        	getQuickTargetTable().addAction(fadeOut(0));
+    	}
+    }
+    
+    public static void onSpawnZombie(ZombieSpawn zSpawn)
+    {
+    	//getTargetLabel().setVisible(true);
+		//getTargetLabel().toFront();
+    	//getTargetImage().setVisible(true);
+    	//getTargetImage().toFront();
+    	//getBottomTable().toFront();
+    	//targetsFade(false);
+    	quickTargetEnabled = false;
+    	getQuickTargetTable().setVisible(false);
+    	getQuickTargetTable().addAction(fadeOut(0));
+    	bTargetSelected = false;
+    	spawningTargetArray.clear();
+    	isSpawnTarget = true;
+    	zombieSpawn = zSpawn;
+    	targetNum = 1;
+    	//auto spawn target
+    	spawningTargetArray.add(new Vector2(zombieSpawn.getX()-15, zombieSpawn.getY()-15));
+    	onOKButton();
+    }
+    
+    private static Table getBottomTable()
+    {
+        if( bottomTable == null ) {
+        	bottomTable = new Table(AbstractImage.getSkin());
+        	bottomTable.addAction(fadeOut(0f));
+        	bottomTable.setFillParent(true);
+        	bottomTable.align(Align.bottom);
+        	bottomTable.add(getTargetOkButton()).space(20);
+        	bottomTable.add(getTargetUndoButton()).space(20);
+        	bottomTable.add(getTargetCancelButton()).space(20);
+        }
+        if (!getStaticStage().getActors().contains(bottomTable, true)){
+			getStaticStage().addActor(bottomTable);
+		}
+            return bottomTable;
+    }
+    
+    private static Button getTargetOkButton()
+    {
+    	if (okButton == null) {
+    		okButton = new Button(getSkin());
+    		okButton.add(" OK ");
+            
+    		okButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (justTouched){
+                    	undoLastTarget();
+                    }
+                    onOKButton();
+                }
+        	});
+    	}
+    	return okButton;
+    }
+    
+    private static void onOKButton()
+    {
+    	touchTimer = 0f;
+        bTargetSelected = true;
+        ZombieTarget.setTargetsFinished(true);
+        if (isSpawnTarget)
+        	ProfileManager.getProfile().subtractBrains(ZombieStats.getZombiePrice(SpawnMenu.getTypeToSpawn())*SpawnMenu.getLabelNumZombiesToSpawn());
+    }
+    
+    private static Button getTargetUndoButton()
+    {
+    	if (undoButton == null) {
+    		undoButton = new Button(getSkin());
+    		undoButton.add(" Undo ");
+            
+    		undoButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    undoLastTarget();
+                }
+        	});
+    	}
+    	return undoButton;
+    }
+    
+    private static Button getTargetCancelButton()
+    {
+    	if (cancelButton == null) {
+    		cancelButton = new Button(getSkin());
+    		cancelButton.add("Cancel");
+            
+    		cancelButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    cancelTargets();
+                }
+        	});
+    	}
+    	return cancelButton;
+    }
+    
+    private static void cancelTargets()
+    {
+    	if (isSpawnTarget){
+    		isSpawnTarget = false;
+    		RoundHelper.addNumZombiesCanSpawn(SpawnMenu.getLabelNumZombiesToSpawn());
+    	}
+    	targetsFade(true);
+    	bTargetSelected = true;
+		bTargetsFinished = false;
+		setPaused(false);
+    }
+    
+    private static Rectangle getButtonRectangle()
+    {
+    	if (buttonRectangle == null){
+    		buttonRectangle = new Rectangle(getTargetOkButton().getX() - 10, getTargetOkButton().getY() - 10, 
+        			(getTargetOkButton().getWidth() + getTargetUndoButton().getWidth() + 30), (getTargetOkButton().getHeight() + 20));
+    	}
+    	return buttonRectangle;
+    }
+    
+    private static Rectangle getSelectTextRectangle()
+    {
+    	if (selectTextRectangle == null){
+    		selectTextRectangle = new Rectangle(getSelectTextImage().getX(), getSelectTextImage().getY(), getSelectTextImage().getWidth(), getSelectTextImage().getHeight());
+    	}
+    	return selectTextRectangle;
+    }
+    
+    private static Rectangle getQuickCancelRectangle()
+    {
+    	if (quickCancelRectangle == null){
+    		quickCancelRectangle = new Rectangle(getQuickTargetCancelButton().getX() - 10, getQuickTargetCancelButton().getY() - 10, getQuickTargetCancelButton().getWidth() + 20, getQuickTargetCancelButton().getHeight() + 20);
+    	}
+    	return quickCancelRectangle;
+    }
+    
+    private static boolean checkButtons(int x, int y)
+    {
+    	if (!quickTargetEnabled){
+	    	if (getButtonRectangle().contains(x, y)){
+	    		return true;
+	    	}
+	    	else 
+	    		return false;
+    	}
+    	else{
+    		if (getSelectTextRectangle().contains(x, y) || getQuickCancelRectangle().contains(x, y)){
+    			return true;
+    		}
+    		else
+    			return false;
+    	}
+    }
+    
+    private static void undoLastTarget()
+    {
+    	if (isSpawnTarget){
+    		if (spawningTargetArray.size > 0){
+    			spawningTargetArray.removeIndex(spawningTargetArray.size - 1);
+            }
+    	}
+    	else{
+	    	if (targetArray.size > 0){
+	        	targetArray.removeIndex(targetArray.size - 1);
+	        }
+    	}
+        if (targetImageArray.size > 0){
+        	if (targetNum > 1)
+        		targetNum--;
+            targetImageArray.get(targetImageArray.size - 1).remove();
+            targetImageArray.removeIndex(targetImageArray.size - 1);
+            
+            targetLabelArray.get(targetLabelArray.size - 1).remove();
+            targetLabelArray.removeIndex(targetLabelArray.size - 1);
+        }
+    }
+    
+    private static Label getTargetLabel()
+    {
+    	if (targetLabel == null) {
+    		targetLabel = new Label("Tap to Select Targets \n OK To Confirm", getSkin());
+    		targetLabel.setWrap(true);
+    		targetLabel.setAlignment(1);
+    		targetLabel.setVisible(false);
+    		targetLabel.setColor(Color.BLUE);
+    		targetLabel.setPosition(Gdx.app.getGraphics().getWidth()/2 - targetLabel.getWidth()/2, (Gdx.app.getGraphics().getHeight()*0.8f) - targetLabel.getHeight()/2);
+    		targetLabel.addAction(getRepeatFade());
+    	}
+    	if (!getStaticStage().getActors().contains(targetLabel, true)){
+			getStaticStage().addActor(targetLabel);
+		}
+    	return targetLabel;
+    }
+    
+    private static Action getRepeatFade()
+	{
+		RepeatAction fade = new RepeatAction();
+		fade.setCount(-1);
+		fade.setAction(sequence( fadeIn( 0.5f ), delay( 0.75f ), fadeOut( 0.5f )));
+		return fade;
+	}
+    
+    private static void targetsFade(boolean fade)
+    {
+    	if (fade){
+    		targetImageRemoved = false;
+    		getTargetImage().setVisible(false);
+    		getTargetLabel().setVisible(false);
+    		getBottomTable().addAction(fadeOut(1f));
+    		for (Image targetImage: targetImageArray){
+    			targetImage.addAction( sequence(  fadeOut( 1f ),
+    		            new Action() {
+    		                @Override
+    		                public boolean act(
+    		                    float delta )
+    		                {
+    		                    // the last action will remove image from stage
+    		                	if (!targetImageRemoved){
+    		                		removeTargetImages();
+    		                		targetImageRemoved = true;
+    		                	}
+    		                    return true;
+    		                }
+    		            } ) );
+    		}
+    		for (Label targetLabel: targetLabelArray){
+    			targetLabel.addAction(fadeOut(1f));
+    		}
+    		//finish fading out the array of target images + other chain stuff
+    	}
+    	else{
+    		//getTargetImage().addAction(fadeIn(0.5f));
+    		//getTargetLabel().addAction(fadeIn(0.5f));
+    		getBottomTable().addAction(fadeIn(0.5f));
+    	}
+    }
+    
+    private static void removeTargetImages()
+    {
+    	for (Image targetImage: targetImageArray){
+    		targetImage.remove();
+    	}
+    	targetImageArray.clear();
+    	
+    	for (Label targetLabel: targetLabelArray){
+    		targetLabel.remove();
+    	}
+    	targetLabelArray.clear();
+    }
+    
+    private static Button getQuickTargetCancelButton()
+    {
+    	if (quickTargetCancelButton == null) {
+    		quickTargetCancelButton = new Button(getSkin());
+    		quickTargetCancelButton.add("Cancel");
+            
+    		quickTargetCancelButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    quickTargetEnabled = false;
+                    getSelectTextImage().setVisible(false);
+                    getQuickTargetTable().setVisible(false);
+                    for (Zombie z1 : getZombieArray()){
+    	    			if (z1.getSelected()){
+    	    				z1.deSelectZombie();
+    	    			}
+    	    		}
+                    getZombieNeedTargetArray().clear();
+                    ZombieSelectTool.resetSelectedZombiesNum();
+                }
+        	});
+    	}
+    	return quickTargetCancelButton;
+    }
+    
+    private static Table getQuickTargetTable()
+    {
+        if( quickTargetTable == null ) {
+        	quickTargetTable = new Table(AbstractImage.getSkin());
+        	quickTargetTable.addAction(fadeOut(0f));
+        	quickTargetTable.setFillParent(true);
+        	quickTargetTable.align(Align.bottom);
+        	quickTargetTable.add(getQuickTargetCancelButton()).padRight(50).padLeft(50).expandX().fillX();
+        }
+        if (!getStaticStage().getActors().contains(quickTargetTable, true)){
+			getStaticStage().addActor(quickTargetTable);
+		}
+            return quickTargetTable;
+    }
+
+	public static boolean isbTargetsFinished() 
+	{
+		return bTargetsFinished;
+	}
+
+	public static void setTargetsFinished(boolean selected) 
+	{
+		bTargetsFinished = selected;
+	}
+	
+	public static Array<Vector2> getSpawnTargets()
+	{
+		return spawningTargetArray;
+	}
+	
+	public static void setQuickTargetEnabled()
+	{
+		quickTargetEnabled = true;
+		getQuickTargetTable().setVisible(true);
+		getQuickTargetTable().toFront();
+		getQuickTargetTable().addAction(fadeIn(0.5f));
+	}
+
+}

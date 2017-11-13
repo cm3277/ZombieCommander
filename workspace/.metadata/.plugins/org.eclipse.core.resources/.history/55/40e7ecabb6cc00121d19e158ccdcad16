@@ -1,0 +1,257 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+import com.JustMoser.ZombieCommander.Helper.GameHelper;
+import com.JustMoser.ZombieCommander.ImageActors.AbstractImage;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.games.GamesClient;
+
+import android.app.Activity;
+import android.content.Intent;
+
+/**
+ * This class handles the game services ONLY on android
+ */
+
+public class GameServices implements GameHelper.GameHelperListener{
+	
+	private static GameHelper mHelper;
+
+    // We expose these constants here because we don't want users of this class
+    // to have to know about GameHelper at all.
+    public static final int CLIENT_GAMES = GameHelper.CLIENT_GAMES;
+    public static final int CLIENT_APPSTATE = GameHelper.CLIENT_APPSTATE;
+    public static final int CLIENT_PLUS = GameHelper.CLIENT_PLUS;
+    public static final int CLIENT_ALL = GameHelper.CLIENT_ALL;
+
+    // Requested clients. By default, that's just the games client.
+    protected int mRequestedClients = CLIENT_GAMES;
+	
+	private static boolean isAndroid = false;
+	@SuppressWarnings("unused")
+	private Activity androidActivity;
+	
+	//ui stufff
+	private static Table signIOTable;
+	private static Table signResultTable;
+	private static Label lblResult;
+	private static Button signInButton;
+	private static Stage currentStage;
+	
+	public GameServices(Activity androidActivity)
+	{
+		this.androidActivity = androidActivity;
+		isAndroid = true;
+		mHelper = new GameHelper(androidActivity);
+		mHelper.setup(this, mRequestedClients);
+	}
+	
+	public static void enableSignIOTable(Stage stage)
+	{
+		if (getIsAndroid() && !isSignedIn()){
+			currentStage = stage;
+			currentStage.addActor(getSignIOTable());
+			getSignIOTable().setVisible(true);
+			getSignIOTable().toFront();
+		}
+	}
+	
+	public static Table getSignIOTable()
+	{
+		if (signIOTable == null){
+			signIOTable = new Table(AbstractImage.getSkin());
+			signIOTable.setFillParent( true );
+			signIOTable.add("").row();
+	    	Label lblSignIn = new Label("Sign In with your Google Plus Account to access all the cool features like Achievements and LeaderBoards!", AbstractImage.getSkin());
+	    	
+	    	lblSignIn.setWrap(true);
+	    	lblSignIn.setAlignment(1);
+	    	signIOTable.add( lblSignIn ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	signInButton = new Button(AbstractImage.getSkin());
+	    	signInButton.add("Sign In");
+	    	
+	    	signIOTable.add(signInButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	signInButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                if (!isSignedIn()){
+	                	disableSignIOTable();
+	                	// start the asynchronous sign in flow
+	                	beginUserInitiatedSignIn();
+	                }
+	                else
+	                {
+	                	disableSignIOTable();
+	                	signOut();
+	                }
+	            }
+	    	});
+	    	
+	    	Button cancelButton = new Button(AbstractImage.getSkin());
+	    	cancelButton.add("Cancel");
+	    	
+	    	signIOTable.add(cancelButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	cancelButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                disableSignIOTable();
+	            }
+	    	});
+    	}
+		signInButton.clear();
+		if (!isSignedIn()){
+			signInButton.add("Sign In");
+		}
+		else
+			signInButton.add("Sign Out");
+		return signIOTable;
+	}
+	
+	private static void disableSignIOTable()
+	{
+		getSignIOTable().setVisible(false);
+		getSignIOTable().remove();
+	}
+	
+	public static Table getSignResultTable(boolean success)
+	{
+		if (signResultTable == null){
+			signResultTable = new Table(AbstractImage.getSkin());
+			signResultTable.setFillParent( true );
+			signResultTable.add("").row();
+	    	lblResult = new Label("", AbstractImage.getSkin());
+	    	
+	    	lblResult.setWrap(true);
+	    	lblResult.setAlignment(1);
+	    	signResultTable.add( lblResult ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	Button signInButton = new Button(AbstractImage.getSkin());
+	    	signInButton.add("OK");
+	    	
+	    	signResultTable.add(signInButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	signInButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                signResultTable.setVisible(false);
+	                signResultTable.remove();
+	            }
+	    	});
+    	}
+		if (success)
+			lblResult.setText("Sign In Success!");
+		else
+			lblResult.setText("Sign In Failed!");
+		return signResultTable;
+	}
+	
+	
+	public static boolean getIsAndroid()
+	{
+		return isAndroid;
+	}
+	
+	//activity implementation
+	//@Override
+    public void onStart() {
+        //mHelper.onStart(androidActivity);
+    }
+
+    //@Override
+    public void onStop() {
+        //super.onStop();
+        mHelper.onStop();
+    }
+
+    //@Override
+    public void onActivityResult(int request, int response, Intent data) {
+        //super.onActivityResult(request, response, data);
+        mHelper.onActivityResult(request, response, data);
+    }
+    
+    public static GamesClient getGamesClient() {
+        return mHelper.getGamesClient();
+    }
+
+    public static boolean isSignedIn() {
+        return mHelper.isSignedIn();
+    }
+
+    protected static void beginUserInitiatedSignIn() {
+        mHelper.beginUserInitiatedSignIn();
+    }
+
+    public static void signOut() {
+        mHelper.signOut();
+    }
+
+    protected void showAlert(String title, String message) {
+        mHelper.showAlert(title, message);
+    }
+
+    protected void showAlert(String message) {
+        mHelper.showAlert(message);
+    }
+
+    protected void enableDebugLog(boolean enabled, String tag) {
+        mHelper.enableDebugLog(enabled, tag);
+    }
+
+    protected String getInvitationId() {
+        return mHelper.getInvitationId();
+    }
+
+    protected void reconnectClients(int whichClients) {
+        mHelper.reconnectClients(whichClients);
+    }
+
+    protected String getScopes() {
+        return mHelper.getScopes();
+    }
+
+    protected boolean hasSignInError() {
+        return mHelper.hasSignInError();
+    }
+
+    protected ConnectionResult getSignInError() {
+        return mHelper.getSignInError();
+    }
+
+    protected void setSignInMessages(String signingInMessage, String signingOutMessage) {
+        mHelper.setSigningInMessage(signingInMessage);
+        mHelper.setSigningOutMessage(signingOutMessage);
+    }
+
+	@Override
+	public void onSignInFailed() 
+	{
+		// TODO Auto-generated method stub
+		currentStage.addActor(getSignResultTable(false));
+		getSignResultTable(false).setVisible(true);
+		getSignResultTable(false).toFront();
+	}
+
+	@Override
+	public void onSignInSucceeded() 
+	{
+		// TODO Auto-generated method stub
+		currentStage.addActor(getSignResultTable(true));
+		getSignResultTable(true).setVisible(true);
+		getSignResultTable(true).toFront();
+	}
+
+}

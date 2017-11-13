@@ -1,0 +1,57 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.SnD.Pack1;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.Human;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Chest;
+import com.JustMoser.ZombieCommander.Tutorial.SnDTutorial;
+import com.badlogic.gdx.math.Vector2;
+
+public class SnDPack1Level1 extends SnDLevel
+{
+	private ZombieSpawn zombieSpawn;
+	private Human localHuman;
+	private static Chest chest;
+	
+    public SnDPack1Level1(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(1));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+        super.addFog();
+        if (!LevelManager.getTutorial(LevelManager.getSearchAndDestroy())){
+        	stage.addActor(new SnDTutorial());
+        }
+    }
+    
+    private void addHumans()
+    {
+    	localHuman = Human.create(stage.getWidth()/2, 800*0.2f);
+        stage.addActor(localHuman);
+    }
+    
+    public void addSpawns()
+    {
+    	zombieSpawn = ZombieSpawn.create(new Vector2(stage.getWidth()/2,800*0.8f));
+        stage.addActor(zombieSpawn);
+        //stage.addActor(ZombieSpawn.create(new Vector2(stage.getWidth()*0.2f,800*0.95f)));
+    }
+   
+    private void addBlockers()
+    {
+    	chest = Chest.create(stage.getWidth()/2, 800*0.3f );
+        stage.addActor(chest);
+    }
+    
+    public static Chest getChest()
+    {
+    	return chest;
+    }
+}

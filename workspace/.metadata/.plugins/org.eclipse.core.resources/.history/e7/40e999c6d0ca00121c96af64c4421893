@@ -1,0 +1,5 @@
+package com.me.tyrian.Helper.Audio;
+
+public class MusicManager {
+
+}

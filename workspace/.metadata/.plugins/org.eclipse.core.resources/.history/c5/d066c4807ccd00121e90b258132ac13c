@@ -1,0 +1,112 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+import com.JustMoser.ZombieCommander.ImageActors.AbstractImage;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class GameServicesUI {
+	
+	private static Table signIOTable;
+	private static Table signResultTable;
+	private static Label lblResult;
+	private static Button signInButton;
+	
+	public static Table getSignIOTable()
+	{
+		if (signIOTable == null){
+			signIOTable = new Table(AbstractImage.getSkin());
+			signIOTable.setFillParent( true );
+			signIOTable.add("").row();
+	    	Label lblSignIn = new Label("Sign In with your Google Plus Account to access all the cool features like Achievements and LeaderBoards!", getSkin());
+	    	
+	    	lblSignIn.setWrap(true);
+	    	lblSignIn.setAlignment(1);
+	    	signIOTable.add( lblSignIn ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	signInButton = new Button(AbstractImage.getSkin());
+	    	signInButton.add("Sign In");
+	    	
+	    	signIOTable.add(signInButton).padRight(25).padLeft(25).padBottom(50).expand().fill().row();
+	    	
+	    	signInButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                if (!isSignedIn()){
+	                	disableSignIOTable();
+	                	// start the asynchronous sign in flow
+	                	beginUserInitiatedSignIn();
+	                }
+	                else
+	                {
+	                	disableSignIOTable();
+	                	signOut();
+	                }
+	            }
+	    	});
+	    	
+	    	Button cancelButton = new Button(AbstractImage.getSkin());
+	    	cancelButton.add("Cancel");
+	    	
+	    	signIOTable.add(cancelButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	cancelButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                disableSignIOTable();
+	            }
+	    	});
+    	}
+		signInButton.clear();
+		if (!isSignedIn()){
+			signInButton.add("Sign In");
+		}
+		else
+			signInButton.add("Sign Out");
+		return signIOTable;
+	}
+	
+	public static Table getSignResultTable(boolean success)
+	{
+		if (signResultTable == null){
+			signResultTable = new Table(getSkin());
+			signResultTable.setFillParent( true );
+			signResultTable.add("").row();
+	    	lblResult = new Label("", getSkin());
+	    	
+	    	lblResult.setWrap(true);
+	    	lblResult.setAlignment(1);
+	    	signResultTable.add( lblResult ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	Button signInButton = new Button(getSkin());
+	    	signInButton.add("OK");
+	    	
+	    	signResultTable.add(signInButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	signInButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                signResultTable.setVisible(false);
+	                signResultTable.remove();
+	                getBackgroundImage().setVisible(false);
+	        		getBackgroundImage().remove();
+	                //signInFinished = true;
+	            }
+	    	});
+    	}
+		if (success)
+			lblResult.setText("Sign In Success!");
+		else
+			lblResult.setText("Sign In Failed!");
+		return signResultTable;
+	}
+
+}

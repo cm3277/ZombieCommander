@@ -1,0 +1,133 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Blocker;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+public class Bullet extends AbstractImage{
+	
+	private float moveSpeed;
+	private float baseSpeed;
+	private boolean isAlive = true;
+	private static int machineGunDamage = 45;
+	private static int sniperDamage = 450;
+	private static int startDamage = 100;
+	private int damage = 100;//100
+	private static TextureRegion bulletRegion;
+
+	public Bullet(TextureRegion animationRegion, float x, float y) {
+		this(animationRegion, x, y, startDamage);
+	}
+	
+	public Bullet(TextureRegion animationRegion, float x, float y, int damage) {
+		super(animationRegion);
+		//humanAnimDrawables = getHumanAnimDrawable();
+		this.setOrigin(getWidth()/2, getHeight()/2);
+		this.setX(x);
+		this.setY(y);
+		baseSpeed = getStage().getHeight();
+		this.damage = damage;
+	}
+	
+	public static Bullet create(float x, float y)
+	    {
+			if (bulletRegion == null) {
+				bulletRegion = getZombieAtlas().findRegion( "Bullet");
+			}
+	        return new Bullet(bulletRegion, x, y);
+	    }
+	
+	public static Bullet createMachineGun(float x, float y)
+    {
+		if (bulletRegion == null) {
+			bulletRegion = getZombieAtlas().findRegion( "Bullet");
+		}
+        return new Bullet(bulletRegion, x, y, machineGunDamage);
+    }
+	
+	public static Bullet createSniper(float x, float y)
+    {
+		if (bulletRegion == null) {
+			bulletRegion = getZombieAtlas().findRegion( "Bullet");
+		}
+        return new Bullet(bulletRegion, x, y, sniperDamage);
+    }
+
+		
+	@Override
+    public void publicAct(float delta )
+    {
+		this.move(delta);
+    }
+	
+	
+	private void move(float delta)
+	{
+		if (isAlive){
+			moveSpeed = baseSpeed * delta;
+			//check if a zombie is in the spot we want to move to
+			checkZombies();
+			this.setY((float)(getY() - moveSpeed * Math.sin((getRotation()-90)*(Math.PI / 180))));
+			this.setX((float) (getX() - moveSpeed * Math.cos((getRotation()-90)*(Math.PI / 180))));
+			if (getY() > getStage().getHeight() + 50 || getY() < -50){
+				destroy();
+			}
+			if (getX() > getStage().getWidth() + 50 || getX() < -50){
+				destroy();
+			}
+			//check for brickWalls that stop bullets
+			checkBlocker();
+			checkFog();
+		}
+	}
+	
+	public void setBaseSpeed(int speed)
+	{
+		baseSpeed = speed;
+	}
+	
+	public void destroy()
+	{
+		isAlive = false;
+		this.remove();
+	}
+	
+	public boolean getAlive()
+	{
+		return isAlive;
+	}
+	
+	public void checkZombies()
+	{
+		for (Zombie z2 : getZombieArray()){
+			if (z2.getRect().contains(getX(), getY())){
+				if (!z2.getDisguised()){
+					z2.hurt(damage);
+					destroy();
+					break;
+				}
+			}
+		}
+	}
+	
+	private void checkBlocker()
+	{
+		for (Blocker blocker : getBlockersArray()){
+			if (blocker.isBrickWall()){
+				if (blocker.getPolygon().contains(getX(), getY())){
+					destroy();
+				}
+			}
+		}
+	}
+	
+	private void checkFog()
+	{
+		for (Fog fog: getFogArray()){
+			if (fog.isActive()){
+				if (fog.getRect().contains(getX(), getY())){
+					fog.fadeAway();
+				}
+			}
+		}
+	}
+}

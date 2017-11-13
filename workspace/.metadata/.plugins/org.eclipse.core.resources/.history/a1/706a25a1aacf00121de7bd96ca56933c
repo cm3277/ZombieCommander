@@ -1,0 +1,423 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.AchievementManager;
+import com.JustMoser.ZombieCommander.Helper.ClassType;
+import com.JustMoser.ZombieCommander.Helper.ProfileManager;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.UpgradeManager;
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager.SoundEffects;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class ZombieCustomUpgrade extends AbstractImage{
+	
+	private static Table upgradeTable;
+	private static Image background;
+	private static Button exitButton;
+	private static Button upgradeHealth;
+	private static Button upgradeDamage;
+	private static Button upgradeSpeed;
+	private static Button customUpgrade;
+	private static int selectedZombieType;
+	private static Table upgradeSuccess;
+	private static Table confirmUpgrade;
+	private static Label lblConfirm;
+	private static int upgradeCost = ZombieStats.getBrainsPerUpgrade();
+	private static int upgradeType = 0;
+	private static String zName;
+	private static TextureRegion zTexture;
+	private static int zombieStats[] = new int[] {0, 0, 0};
+
+	public ZombieCustomUpgrade(int zombieType, String zombieName, TextureRegion zombieTexture) 
+	{
+		zName = zombieName;
+		zTexture = zombieTexture;
+		 enable(zombieType, zombieName, zombieTexture);
+	}
+	
+	public static ZombieCustomUpgrade createCustomUpgrade(int zombieType, String zombieName, TextureRegion zombieTexture, int stats[])
+	{
+		zombieStats[0] = stats[0];
+		zombieStats[1] = stats[1];
+		zombieStats[2] = stats[2];
+		selectedZombieType = zombieType;
+		return new ZombieCustomUpgrade(zombieType, zombieName, zombieTexture);
+	}
+	
+	public void enable(int zombieType, String zombieName, TextureRegion zombieTexture)
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		if (AchievementManager.getNumZombiesSpawned(zombieType) >= AchievementManager.getNumNoobZombies()){
+			getStaticStage().addActor(getUpgradeTable(zombieType, zombieName, zombieTexture));
+		}
+		else{
+			getStaticStage().addActor(getNotUnlockedTable(zombieType, zombieName, zombieTexture));
+		}
+		upgradeTable.setVisible(true);
+		upgradeTable.toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	public static void disable()
+	{
+		getBackgroundImage().setVisible(false);
+		upgradeTable.remove();
+		upgradeTable.setVisible(false);
+		upgradeTable.clear();
+		upgradeTable = null;
+	}
+	
+	private static Image getBackgroundImage()
+   {
+		//if (background == null) {
+	   		background = new Image(getMenuBackgroundRegion());
+	   		background.setVisible(true);
+	   		//background.setColor(Color.BLACK);
+	   		background.setFillParent(true);
+		//}
+		if (!getStaticStage().getActors().contains(background, true)){
+			getStaticStage().addActor(background);
+		}
+   		return background;
+   }
+	
+	private Table getNotUnlockedTable(int zombieType, String zombieName, TextureRegion zombieTexture)
+	{
+		//if( upgradeTable == null ) {
+	    	upgradeTable = new Table(getSkin());
+	    	upgradeTable.setVisible(false);
+	        upgradeTable.setFillParent(true);
+	    	upgradeTable.add("").row();
+	        //Table Title
+	    	upgradeTable.add(zombieName).padTop(50).spaceBottom(50).row();
+	    	upgradeTable.add(new Image(zombieTexture)).space(15).row();
+	    	Label lblText = new Label("You need to unlock the " + zombieName + " Noob achievement (Requires spawning 3 " + zombieName + "s) first in order to upgrade them.", super.getSkin());
+    		lblText.setWrap(true);
+    		lblText.setAlignment(1);
+    		upgradeTable.add( lblText ).padRight(25).padLeft(25).expandX().fill().space(50).row();
+    		//Exit button
+     	   upgradeTable.add(getExitButton()).padRight(25).padLeft(25).expandX().fill().space(50);
+		//}
+		return upgradeTable;
+	    	   
+	}
+	
+	private Table getUpgradeTable(int zombieType, String zombieName, TextureRegion zombieTexture)
+   {
+      // if( upgradeTable == null ) {
+    	   upgradeTable = new Table(getSkin());
+    	   upgradeTable.setVisible(false);
+    	   upgradeTable.setFillParent(true);
+    	   upgradeTable.add("").row();
+           //Table Title
+    	   upgradeTable.add(zombieName).padTop(10).spaceBottom(15).colspan(3).row();
+    	   upgradeTable.add(new Image(zombieTexture)).space(15).colspan(3).row();
+    	   //Health button
+    	   upgradeTable.add(getUpgradeHealthButton()).padRight(25).padLeft(25).expandX().fill().space(10).colspan(2).row();
+    	   //price 
+    	   Label priceLabel = new Label(getActualPercent(zombieType, UpgradeManager.getHealthUpgradeType()) + "% +     Price: " + ZombieStats.getBrainsPerUpgrade(), getSkin());
+   		   priceLabel.setColor(Color.RED);
+   		   upgradeTable.add(priceLabel).spaceTop(10).padLeft(20).spaceLeft(10).align(Align.right);
+   		   Image brainImage = new Image(Brain.getBrainRegion());
+   		   upgradeTable.add(brainImage).spaceTop(10).align(Align.left).row();
+   		   //Damage Button
+   		   upgradeTable.add(getUpgradeDamageButton()).padRight(25).padLeft(25).expandX().fill().space(10).colspan(2).row();
+   		   Label damagePriceLabel = new Label(getActualPercent(zombieType, UpgradeManager.getDamageUpgradeType()) + "% +     Price: " + ZombieStats.getBrainsPerUpgrade(), getSkin());
+   		   damagePriceLabel.setColor(Color.RED);
+   		   upgradeTable.add(damagePriceLabel).spaceTop(10).padLeft(20).spaceLeft(10).align(Align.right);
+   		   upgradeTable.add(new Image(Brain.getBrainRegion())).spaceTop(10).align(Align.left).row();
+   		   //Speed Button
+   		   upgradeTable.add(getUpgradeSpeedButton()).padRight(25).padLeft(25).expandX().fill().space(10).colspan(2).row();
+   		   Label speedPriceLabel = new Label(getActualPercent(zombieType, UpgradeManager.getSpeedUpgradeType()) + "% +     Price: " + ZombieStats.getBrainsPerUpgrade(), getSkin());
+   		   speedPriceLabel.setColor(Color.RED);
+		   upgradeTable.add(speedPriceLabel).spaceTop(10).padLeft(20).spaceLeft(10).align(Align.right);
+		   upgradeTable.add(new Image(Brain.getBrainRegion())).spaceTop(10).align(Align.left).row();
+		   //Custom upgrade button (only 4 zombies have it)
+		   if (ClassType.isAssassin(selectedZombieType) || ClassType.isHunter(selectedZombieType) || ClassType.isHealWitch(selectedZombieType)){
+			   upgradeTable.add(getCustomUpgradeButton()).padRight(25).padLeft(25).expandX().fill().space(5).colspan(2).row();
+	   		   Label customPriceLabel = new Label(getActualPercent(zombieType, UpgradeManager.getCustomUpgradeType()) + "% +     Price: " + ZombieStats.getBrainsPerUpgrade(), getSkin());
+	   		   customPriceLabel.setColor(Color.RED);
+			   upgradeTable.add(customPriceLabel).spaceTop(5).padLeft(20).spaceLeft(10).align(Align.right);
+			   upgradeTable.add(new Image(Brain.getBrainRegion())).spaceTop(5).align(Align.left).row();
+		   }
+   		   //Exit button
+    	   upgradeTable.add(getExitButton()).padRight(25).padLeft(25).expandX().fill().colspan(2).space(5);
+      // }
+       return upgradeTable;
+   }
+	
+	private static int getActualPercent(int zombieType, int upgradeType)
+	{
+		float percent = 0;
+		if (upgradeType == UpgradeManager.getHealthUpgradeType())
+			percent = UpgradeManager.getUpgradePercent(UpgradeManager.getHealthUpgrade(zombieType));
+		else if (upgradeType == UpgradeManager.getDamageUpgradeType())
+			percent = UpgradeManager.getUpgradePercent(UpgradeManager.getDamageUpgrade(zombieType));
+		else if (upgradeType == UpgradeManager.getSpeedUpgradeType())
+			percent = UpgradeManager.getUpgradePercent(UpgradeManager.getSpeedUpgrade(zombieType));
+		else if (upgradeType == UpgradeManager.getCustomUpgradeType())
+			percent = UpgradeManager.getUpgradePercent(UpgradeManager.getCustomUpgrade(zombieType));
+		
+		percent = MathUtils.roundPositive((percent * 100) - 100);
+		return (int) percent;
+		
+	}
+	
+	private static Button getUpgradeHealthButton()
+    {
+    	//if (upgradeHealth == null) {
+    		upgradeHealth = new Button(getSkin());
+    		upgradeHealth.add("Upgrade Health");
+            upgradeHealth.setColor(Color.RED);
+    		upgradeHealth.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (ProfileManager.getProfile().getNumBrains() >= ZombieStats.getBrainsPerUpgrade()){
+                    	upgradeType = UpgradeManager.getHealthUpgradeType();
+                    	disable();
+                    	enableConfirmUpgrade();
+                    }
+                }
+        	});
+    	//}
+    	return upgradeHealth;
+    }
+	
+	private static Button getUpgradeDamageButton()
+    {
+    	//if (upgradeDamage == null) {
+    		upgradeDamage = new Button(getSkin());
+    		upgradeDamage.add("Upgrade Damage");
+            upgradeDamage.setColor(Color.BLUE);
+    		upgradeDamage.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (ProfileManager.getProfile().getNumBrains() >= ZombieStats.getBrainsPerUpgrade()){
+                    	upgradeType = UpgradeManager.getDamageUpgradeType();
+                    	disable();
+                    	enableConfirmUpgrade();
+                    }
+                }
+        	});
+    	//}
+    	return upgradeDamage;
+    }
+	
+	private static Button getUpgradeSpeedButton()
+    {
+    	//if (upgradeSpeed == null) {
+    		upgradeSpeed = new Button(getSkin());
+    		upgradeSpeed.add("Upgrade Speed");
+            upgradeSpeed.setColor(Color.GREEN);
+    		upgradeSpeed.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (ProfileManager.getProfile().getNumBrains() >= ZombieStats.getBrainsPerUpgrade()){
+                    	upgradeType = UpgradeManager.getSpeedUpgradeType();
+                    	disable();
+                    	enableConfirmUpgrade();
+                    }
+                }
+        	});
+    	//}
+    	return upgradeSpeed;
+    }
+	
+	private static Button getCustomUpgradeButton()
+    {
+		//if (customUpgrade == null){
+    		customUpgrade = new Button(getSkin());
+            customUpgrade.setColor(Color.MAGENTA);
+    		customUpgrade.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //if (ClassType.isAssassin(selectedZombieType) || ClassType.isHunter(selectedZombieType)){
+            			upgradeCost = ZombieStats.getBrainsPerUpgrade();
+                    //}
+                    if (ProfileManager.getProfile().getNumBrains() >= upgradeCost){
+                    	upgradeType = UpgradeManager.getCustomUpgradeType();
+                    	disable();
+                    	enableConfirmUpgrade();
+                    }
+                }
+        	});
+		//}
+		customUpgrade.clear();
+		if (ClassType.isAssassin(selectedZombieType)){
+			customUpgrade.add("Upgrade Cloak Time");
+		}
+		else if (ClassType.isHunter(selectedZombieType)){
+			customUpgrade.add("Upgrade Range");
+		}
+		else if (ClassType.isHealWitch(selectedZombieType)){
+			customUpgrade.add("Upgrade Heal Radius");
+		}
+    	return customUpgrade;
+    }
+	
+	private static void enableUpgradeSuccess()
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		getUpgradeSuccessTable().setVisible(true);
+		getUpgradeSuccessTable().toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	private static void disableUpgradeSuccess()
+	{
+		getUpgradeSuccessTable().setVisible(false);
+		ZombieCustomUpgrade.createCustomUpgrade(selectedZombieType, zName, zTexture, zombieStats);
+	}
+	
+	private static void enableConfirmUpgrade()
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		getConfirmUpgradeTable().setVisible(true);
+		getConfirmUpgradeTable().toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	private static void disableConfirmUpgrade()
+	{
+		getConfirmUpgradeTable().setVisible(false);
+		//ZombieCustomUpgrade.createCustomUpgrade(selectedZombieType, zName, zTexture, zombieStats);
+	}
+	
+	private static Table getUpgradeSuccessTable()
+	{
+		//if (upgradeSuccess == null){
+			upgradeSuccess = new Table(getSkin());
+			upgradeSuccess.setVisible(false);
+			upgradeSuccess.setFillParent(true);
+			upgradeSuccess.add("Upgrade Bought!").padTop(100).space(100).row();
+			Button okay = new Button(getSkin());
+    		okay.add(" OK ");
+    		okay.setColor(Color.GREEN);
+    		upgradeSuccess.add(okay).padRight(25).padLeft(25).padBottom(100).expand().fill();
+    		
+    		okay.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disableUpgradeSuccess();
+                }
+        	});
+		//}
+		if (!getStaticStage().getActors().contains(upgradeSuccess, true)){
+			getStaticStage().addActor(upgradeSuccess);
+		}
+		return upgradeSuccess;
+	}
+	
+	private static Table getConfirmUpgradeTable()
+	{
+		//if (confirmUpgrade == null){
+			confirmUpgrade = new Table(getSkin());
+			confirmUpgrade.setVisible(false);
+			confirmUpgrade.setFillParent(true);
+			lblConfirm = new Label("Are you sure you want to Upgrade for", getSkin());
+			lblConfirm.setWrap(true);
+			lblConfirm.setAlignment(1);
+			confirmUpgrade.add(lblConfirm).padTop(100).colspan(2).expandX().fill().space(20).row();
+			Label priceLabel = new Label("" + ZombieStats.getBrainsPerUpgrade(), getSkin());
+	   		priceLabel.setColor(Color.RED);
+	   		confirmUpgrade.add(priceLabel).space(5).align(Align.right);
+	   		Image brainImage = new Image(Brain.getBrainRegion());
+	   		confirmUpgrade.add(brainImage).space(5).align(Align.left).row();
+			Button okay = new Button(getSkin());
+    		okay.add(" Yes ");
+    		okay.setColor(Color.GREEN);
+    		confirmUpgrade.add(okay).padRight(25).padLeft(25).expand().fill().space(50).colspan(2).row();
+    		
+    		okay.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    onConfirmUpgrade();
+                }
+        	});
+    		
+    		Button cancel = new Button(getSkin());
+    		cancel.add(" Cancel ");
+    		cancel.setColor(Color.RED);
+    		confirmUpgrade.add(cancel).padRight(25).padLeft(25).padBottom(50).expand().fill().space(50).colspan(2);
+    		
+    		cancel.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disableConfirmUpgrade();
+                    ZombieCustomUpgrade.createCustomUpgrade(selectedZombieType, zName, zTexture, zombieStats);
+                }
+        	});
+		//}
+		if (upgradeType == UpgradeManager.getHealthUpgradeType()){
+			lblConfirm.setText("Are you sure you want to Upgrade Health for");
+		}
+		else if (upgradeType == UpgradeManager.getDamageUpgradeType()){
+			lblConfirm.setText("Are you sure you want to Upgrade Damage for");
+		}
+		else if (upgradeType == UpgradeManager.getSpeedUpgradeType()){
+			lblConfirm.setText("Are you sure you want to Upgrade Speed for");
+		}
+		else if (upgradeType == UpgradeManager.getCustomUpgradeType()){
+			lblConfirm.setText("Are you sure you want to Upgrade for");
+		}
+		if (!getStaticStage().getActors().contains(confirmUpgrade, true)){
+			getStaticStage().addActor(confirmUpgrade);
+		}
+		return confirmUpgrade;
+	}
+	
+	private static void onConfirmUpgrade()
+	{
+		SoundManager.play(SoundEffects.PURCHASE, 1f);
+		ProfileManager.getProfile().subtractBrains(upgradeCost);
+    	UpgradeManager.upgrade(selectedZombieType, upgradeType);
+        disableConfirmUpgrade();
+        enableUpgradeSuccess();
+	}
+	
+	private static Button getExitButton()
+    {
+    	//if (exitButton == null) {
+    		exitButton = new Button(getSkin());
+            exitButton.add("Exit");
+            
+            exitButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(selectedZombieType, zName, zTexture, zombieStats[0], zombieStats[1], zombieStats[2]);
+                }
+        	});
+    	//}
+    	return exitButton;
+    }
+}

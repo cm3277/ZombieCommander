@@ -1,0 +1,50 @@
+
+gameTextures.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+MenuBackground
+  rotate: false
+  xy: 1, 1
+  size: 533, 800
+  orig: 533, 800
+  offset: 0, 0
+  index: -1
+DesertBackground
+  rotate: false
+  xy: 536, 1
+  size: 480, 800
+  orig: 480, 800
+  offset: 0, 0
+  index: -1
+
+gameTextures2.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+GrassBackground
+  rotate: false
+  xy: 1, 1
+  size: 480, 800
+  orig: 480, 800
+  offset: 0, 0
+  index: -1
+splash
+  rotate: false
+  xy: 483, 1
+  size: 480, 800
+  orig: 480, 800
+  offset: 0, 0
+  index: -1
+
+gameTextures3.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+MoonBackground
+  rotate: false
+  xy: 1, 1
+  size: 480, 800
+  orig: 480, 800
+  offset: 0, 0
+  index: -1

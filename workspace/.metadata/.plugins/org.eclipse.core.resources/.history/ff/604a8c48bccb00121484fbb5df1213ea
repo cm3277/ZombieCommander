@@ -1,0 +1,172 @@
+package com.me.tyrian.Screens;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.me.tyrian.Tyrian;
+import com.me.tyrian.Helper.AchievementManager;
+import com.me.tyrian.Helper.LevelManager;
+import com.me.tyrian.Screens.Levels.CtF.CtFPackSelect;
+import com.me.tyrian.Screens.Levels.Slayer.SlayerPackSelect;
+import com.me.tyrian.Screens.Levels.SnD.SnDPackSelect;
+
+public class WorldSelectScreen extends AbstractScreen
+{
+	//private static Image backgroundImage;
+	private Table notUnlockedTable;
+	private Table selectTable;
+	private Label lblWarning;
+	
+    public WorldSelectScreen(Tyrian game )
+    {
+        super( game );
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+
+        // let's make sure the stage is clear
+        stage.clear();
+
+        // and finally we add the actor to the stage
+        stage.addActor( getMenuBackgroundImage() );
+        
+        //do table 
+        getMenuTable();
+        
+
+    }
+    
+    private Table getMenuTable()
+    {
+    	//Make the Menu table
+        selectTable = super.getTable();
+        selectTable.clear();
+        //table.setPosition(Gdx.app.getGraphics().getWidth()/2, Gdx.app.getGraphics().getHeight() * 0.8f);
+        Label lblWelcome = new Label("Gametype Selection", super.getSkin());
+        lblWelcome.setWrap(true);
+        lblWelcome.setAlignment(1);
+        lblWelcome.setPosition(Gdx.app.getGraphics().getWidth()*0.1f, Gdx.app.getGraphics().getHeight() * 0.9f);
+        //lblWelcome.setWidth(Gdx.app.getGraphics().getWidth());
+        //table.add( lblWelcome ).expandX().fill().spaceBottom(50);
+        //table.row();
+        stage.addActor(lblWelcome);
+        //levell 1
+    	final Button b1 = new Button(super.getSkin());
+    	b1.add("Slayer");
+    	b1.setColor(Color.GREEN);
+    	selectTable.add(b1).padTop(100).padRight(25).padLeft(25).expand().fill().row().space(50);
+    	
+    	b1.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                game.setScreen( new SlayerPackSelect( game ) );
+            }
+    	});
+    	
+    	//level 2
+    	final Button level2Button = new Button(super.getSkin());
+    	level2Button.add("Search And Destroy");
+    	level2Button.setColor(Color.BLUE);
+    	selectTable.add(level2Button).padRight(25).padLeft(25).expand().fill().row().space(50);
+    	
+    	level2Button.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                if (AchievementManager.getLevelPackNoob(LevelManager.getSlayer()))
+                	game.setScreen( new SnDPackSelect( game) );
+                else
+                	enableNotUnlockedTable(LevelManager.getSearchAndDestroy());
+            }
+    	});
+    	
+    	//ctf
+    	final Button level3Button = new Button(super.getSkin());
+    	level3Button.add("Capture The Flag");
+    	level3Button.setColor(Color.RED);
+    	selectTable.add(level3Button).padRight(25).padLeft(25).expand().fill().row().space(50);
+    	
+    	level3Button.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                if (AchievementManager.getLevelPackNoob(LevelManager.getSearchAndDestroy()))
+                	game.setScreen( new CtFPackSelect( game) );
+                else
+                	enableNotUnlockedTable(LevelManager.getCaptureTheFlag());
+            }
+    	});
+    	
+    	final Button menuButton = new Button(super.getSkin());
+    	menuButton.add("Exit to Menu");
+    	selectTable.add(menuButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+    	
+    	menuButton.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                game.setScreen( new MenuScreen( game ) );
+            }
+    	});
+    	return selectTable;
+    }
+    
+    private void enableNotUnlockedTable(int gameTypeId)
+    {
+    	selectTable.setVisible(false);
+    	stage.addActor(getNotUnlockedTable(gameTypeId));
+    	getNotUnlockedTable(gameTypeId).toFront();
+    }
+    
+    private void disableNotUnlockedTable(int gameTypeId)
+    {
+    	selectTable.setVisible(true);
+    	getNotUnlockedTable(gameTypeId).remove();
+    }
+    
+    private Table getNotUnlockedTable(final int gameTypeId)
+    {
+    	if (notUnlockedTable == null){
+	    	notUnlockedTable = new Table(getSkin());
+	    	notUnlockedTable.setFillParent( true );
+	    	notUnlockedTable.add("").row();
+	    	lblWarning = new Label("", super.getSkin());
+	    	
+	    	lblWarning.setWrap(true);
+	    	lblWarning.setAlignment(1);
+	    	notUnlockedTable.add( lblWarning ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	Button okayButton = new Button(super.getSkin());
+	    	okayButton.add("OK");
+	    	
+	    	notUnlockedTable.add(okayButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	okayButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                disableNotUnlockedTable(gameTypeId);
+	            }
+	    	});
+    	}
+    	if (gameTypeId == LevelManager.getSearchAndDestroy())
+    		lblWarning.setText("You do not have Search And Destory unlocked. You need to Unlock Slayer Noob first (requires beating the first 3 Slayer levels).");
+    	if (gameTypeId == LevelManager.getCaptureTheFlag())
+    		lblWarning.setText("You do not have Capture the Flag unlocked. You need to Unlock Search And Destory Noob first (requires beating the first 3 Search And Destory levels).");
+    	return notUnlockedTable;
+    	
+    }
+}

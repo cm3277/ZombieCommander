@@ -1,0 +1,533 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager.SoundEffects;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Blocker;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.rotateTo;
+
+public class Human extends AbstractImage{
+	
+	private static int CLASSTYPE = 2;
+	float walkStateTime;
+	private Rectangle recTarget;
+	private Rectangle body;
+	private float rotateSpeed = 0.1f;
+	private float rotationTarget = 0;
+	private float isRotatingCounter = 0.5f;
+	//ammo
+	private int maxAmmo = 20;
+	private int currentAmmo;
+	private boolean isReloading = false;
+	private float reloadCounter = 0f;
+	private static float reloadDelay = 2f;
+	private float bulletDelay = 0.5f;
+	private float bulletCounter = 0f;
+	private boolean noTarget = true;
+	private boolean isAlive = true;
+	private int range = 250;
+	//health
+	private int health = 700;
+	private static float fullHealth = 700;
+	//moving
+	private float moveSpeed;
+	private float baseSpeed;
+	private float isStuckDelay = 1f;
+	private float isStuckCounter = 0f;
+	private boolean isStuck = false;
+	private boolean isBlocked = false;
+	private boolean canMove = true;
+	private boolean isMoving = false;
+	private Polygon polyBody;
+	private boolean inRange = true;
+	private Rectangle rangeBox;
+	private float slowRotateInterval = 2f;
+	private boolean slowReversed = false;
+	private boolean outOfBounds = false;
+	//private static Map<TextureRegion,Drawable> humanAnimDrawables;
+	//animation
+	private static TextureRegion humanRegion;
+	private static TextureRegionDrawable humanAnimDrawables;
+	private static TextureRegion humanReloadRegion;
+	private static TextureRegionDrawable humanReloadDrawable;
+
+	public Human(TextureRegion animationRegion, float x, float y) {
+		this(animationRegion, x, y, false);
+	}
+	
+	public Human(TextureRegion animationRegion, float x, float y, boolean middle) {
+		super(animationRegion);
+		//humanAnimDrawables = getHumanAnimDrawable();
+		body = new Rectangle(x,y, getWidth()*0.8f,getHeight()*0.8f);
+		recTarget = new Rectangle();
+		this.setOrigin(getWidth()/2, getHeight()/2);
+		if (!middle){
+			this.setX(x);
+			this.setY(y);
+		}
+		else
+			this.setPosition(x - this.getWidth()/2, y - this.getHeight()/2);
+		getHumanArray().add(this);
+		currentAmmo = maxAmmo;
+		baseSpeed = MathUtils.random(50, 80);
+	}
+	
+	public static Human create(float x, float y)
+	    {
+			if (humanRegion == null) {
+				humanRegion = getZombieAtlas().findRegion( "Human");
+			}
+			if (humanAnimDrawables == null) {
+	    		humanAnimDrawables = new TextureRegionDrawable(humanRegion);
+	    	}
+	        return new Human(humanRegion, x, y);
+	    }
+	
+	public static Human createCenter(float x, float y)
+    {
+		if (humanRegion == null) {
+			humanRegion = getZombieAtlas().findRegion( "Human");
+		}
+		if (humanAnimDrawables == null) {
+    		humanAnimDrawables = new TextureRegionDrawable(humanRegion);
+    	}
+        return new Human(humanRegion, x, y, true);
+    }
+	
+	private static TextureRegionDrawable getReloadDrawable()
+	{
+		if (humanReloadDrawable == null){
+			humanReloadRegion = getZombieAtlas().findRegion( "HumanReload");
+			humanReloadDrawable = new TextureRegionDrawable(humanReloadRegion);
+		}
+		return humanReloadDrawable;
+	}
+
+		
+	@Override
+    public void publicAct(float delta )
+    {
+		if (isAlive){
+			//this.move(delta);
+			//find closest Zombie and set it as target
+			animateHuman(delta);
+			
+			//ctf
+			if (RoundHelper.getGameTypeId() == LevelManager.getCaptureTheFlag()){
+				checkTargetRange();
+				if (!inRange){
+					move(delta);
+				}
+				else
+					setTargetFromFlag();
+			}
+			else
+				setTarget();
+			//Update rotation Counter 
+			isRotatingCounter += delta;
+			if (recTarget.x != 0 && recTarget.y != 0 && !noTarget){
+				if (RoundHelper.getGameTypeId() != LevelManager.getCaptureTheFlag())
+					rotate();
+				else if (inRange)
+					rotate();
+				bulletCounter += delta;
+				fire();
+			}
+		}
+    }
+	
+	public void animateHuman(float delta)
+	{
+		if(isReloading){
+			if (this.getDrawable() != humanReloadDrawable){
+				setDrawable(getReloadDrawable());
+			}
+			reloadCounter += delta;
+			if (reloadCounter >= reloadDelay){
+				isReloading = false;
+				reloadCounter = 0f;
+			}
+		}
+		else {
+			setAnimation();
+		}
+	}
+	
+	public void setAnimation()
+	{
+		if (this.getDrawable() != humanAnimDrawables)
+			setDrawable(humanAnimDrawables);
+	}
+	
+	private void fire()
+	{
+		if (currentAmmo > 0){
+			if (bulletCounter >= bulletDelay){
+				createBullet();
+				bulletCounter = 0;
+				currentAmmo--;
+				if (currentAmmo == 0)
+					isReloading = true;
+			}
+		}
+		else if (!isReloading){
+			currentAmmo = maxAmmo;
+		}
+	}
+	
+	public void createBullet()
+	{
+		SoundManager.play(SoundEffects.GUNSHOT, 1f);
+		Bullet bullet = Bullet.create(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+		bullet.setRotation(getRotation());
+		getStage().addActor(bullet);
+	}
+	
+	private void setTarget()
+	{
+		double lowestDist = 0;
+		int closestZombieNum = 0;
+		double dist;
+		int currentZombieNum = -1;
+		if (getZombieArray().size > 0){
+			for (Zombie zombie : getZombieArray()){
+				currentZombieNum++;
+				if (!zombie.getDisguised() && zombie.getAlive()){
+					dist = Math.sqrt(Math.pow(zombie.getX() - this.getX(), 2) + Math.pow(zombie.getY() - this.getY(), 2));
+					if (lowestDist == 0 || dist < lowestDist){
+						lowestDist = dist;
+						closestZombieNum = currentZombieNum;
+					}
+				}
+			}
+			if (lowestDist <= range){
+				if (getZombieArray().get(closestZombieNum).getDisguised())
+					noTarget = true;
+				else{
+					recTarget.x = getZombieArray().get(closestZombieNum).getX();
+					recTarget.y = getZombieArray().get(closestZombieNum).getY();
+					noTarget = false;
+					//rotate();
+				}
+			}
+			else
+				noTarget = true;
+		}
+		else
+			noTarget = true;
+	}
+	
+	private void setTargetFromFlag()
+	{
+		if (getFlag().getIsCarried()){
+			if (getFlag().getZombieCarrier() != null){
+				recTarget.x = getFlag().getZombieCarrier().getX();
+				recTarget.y = getFlag().getZombieCarrier().getY();
+			}
+		}
+		else{
+			double lowestDist = 0;
+			int closestZombieNum = 0;
+			double dist;
+			int currentZombieNum = -1;
+			if (getZombieArray().size > 0){
+				for (Zombie zombie : getZombieArray()){
+					currentZombieNum++;
+					if (!zombie.getDisguised() && zombie.getAlive()){
+						dist = Math.sqrt(Math.pow(zombie.getX() - getFlag().getX(), 2) + Math.pow(zombie.getY() - getFlag().getY(), 2));
+						if (lowestDist == 0 || dist < lowestDist){
+							lowestDist = dist;
+							closestZombieNum = currentZombieNum;
+						}
+					}
+				}
+				if (lowestDist <= range){
+					if (getZombieArray().get(closestZombieNum).getDisguised())
+						noTarget = true;
+					else{
+						recTarget.x = getZombieArray().get(closestZombieNum).getX();
+						recTarget.y = getZombieArray().get(closestZombieNum).getY();
+						noTarget = false;
+						//rotate();
+					}
+				}
+				else
+					noTarget = true;
+			}
+			else
+				noTarget = true;
+		}
+	}
+	
+	private void setFlagTarget()
+	{
+		if (getFlag().getIsCarried()){
+			if (getFlag().getZombieCarrier() != null){
+				recTarget.x = getFlag().getZombieCarrier().getX();
+				recTarget.y = getFlag().getZombieCarrier().getY();
+				noTarget = false;
+			}
+		}
+		else{
+			noTarget = true;
+			recTarget.x = getFlag().getX();
+			recTarget.y = getFlag().getY();
+		}
+		//rotate();
+	}
+	
+	private void rotate()
+	{
+		if (isRotatingCounter >= 0.5){
+			rotationTarget = calcAngle(body.x, body.y, recTarget.x + recTarget.width/2, recTarget.y + recTarget.height/2);
+			this.addAction(rotateTo(-rotationTarget, rotateSpeed));
+			isRotatingCounter = 0f;
+		}
+		//Gdx.app.log( Tyrian.LOG, "SetRotation: " + -rotationAngle );
+	}
+	
+	public Rectangle getRect()
+	{
+		return body;
+	}
+	
+	public boolean getAlive()
+	{
+		return isAlive;
+	}
+	
+	public void hurt(int damage)
+	{
+		health -= damage;
+		//sound
+		SoundManager.play(SoundEffects.BLOCKERTHUD, 0.7f);
+		//Zombie.playFleshSound();
+		//health bar
+		getStage().addActor(HealthBar.create(getX(),  getY(),  (float)(health)/fullHealth, false));
+		getStage().addActor(HealthBar.create(getX(),  getY(),  (float)(health)/fullHealth, true));
+		if (health <= 0){
+			SoundManager.play(SoundEffects.HUMANMOAN, 0.8f);
+			getStage().addActor(DeadBody.create(CLASSTYPE, getX(), getY(), getRotation()));
+			destroy();
+		}
+	}
+	
+	private void destroy()
+	{
+		this.getStage().addActor(Brain.create(this.getX() + this.getWidth()/2,
+				this.getY() + this.getHeight()/2, ZombieStats.getBrainsPerHuman(), false));
+		isAlive = false;
+		getHumanArray().removeValue(this, true);
+		this.remove();
+	}
+	
+	public void setBulletDelay(float delay)
+	{
+		this.bulletDelay = delay;
+	}
+	
+	public void setMaxAmmo(int max)
+	{
+		this.maxAmmo = max;
+		this.currentAmmo = max;
+	}
+	
+	public void setRange(int range)
+	{
+		this.range = range;
+	}
+	
+	private void move(float delta)
+	{
+		if (recTarget.x != 0 && recTarget.y != 0)
+		{
+			moveSpeed = baseSpeed * delta;
+			//collision detection
+			if (!isBlocked && !isStuck && isStuckCounter >= isStuckDelay)
+				rotate();
+			else if (isStuck || isBlocked){
+				if (isMoving){
+					slowRotate();
+					isStuckCounter = 0f;
+				}
+			}
+			else
+				isStuckCounter += delta;
+			//check to see if zombie reached target yet + move
+				if (canMove){
+					body.y -= moveSpeed * Math.sin((getRotation()-90)*(Math.PI / 180));
+					body.x -= moveSpeed * Math.cos((getRotation()-90)*(Math.PI / 180));
+					if (!isMoving)
+					isMoving = true;
+				}
+				else
+					isMoving = false;
+			}
+			else{
+				if (isMoving)
+					isMoving = false;
+				}
+		//check for blockers
+		checkBlocker();
+		//check running into other humans
+		checkHumanCollision();
+		//check out of bounds
+		checkOutOfBounds();
+		//update real position
+		this.setY(body.y);
+		this.setX(body.x);
+	}
+	
+	private void slowRotate()
+	{
+		/*if (!rotateDirection){
+			if (rotationTarget != 0){
+				if (-rotationTarget > this.getRotation())
+					slowRotateInterval = 2f;
+				else
+					slowRotateInterval = -2f;
+				rotateDirection = true;
+			}
+		}	*/
+		this.setRotation(getRotation() + slowRotateInterval);
+	}
+	
+	private void checkOutOfBounds()
+	{
+		//x bounds
+		if (body.getX() < 0)
+			setOutOfBounds();
+		else if (body.getX() + this.getWidth() > 480)
+			setOutOfBounds();
+		//y bounds
+		else if (body.getY() < 0)
+			setOutOfBounds();
+		else if (body.getY() + this.getHeight() > Gdx.app.getGraphics().getHeight() - 30)
+			setOutOfBounds();
+		else if (outOfBounds){
+			outOfBounds = false;
+			slowReversed = false;
+		}
+			
+	}
+	
+	private void setOutOfBounds()
+	{
+		body.x = getX();
+		body.y = getY();
+		if (!slowReversed){
+			slowRotateInterval = -slowRotateInterval;
+			slowReversed = true;
+		}
+	}
+	
+	private void checkHumanCollision()
+	{
+		//check if a zombie is in the spot we want to move to
+		for (Human z2 : getHumanArray()){
+				if(this != z2 && z2.getAlive()){
+					if (z2.getRect().overlaps(body)){
+						double myDist = Math.sqrt(Math.pow(z2.getX() - this.body.x, 2) + Math.pow(z2.getY() - this.body.y, 2));
+						double otherDist = Math.sqrt(Math.pow(z2.getRect().getX() - this.getX(), 2) + Math.pow(z2.getRect().getY() - this.getY(), 2));
+						if (myDist < otherDist){
+							body.x = getX();
+							body.y = getY();
+							isStuck = true;
+							break;
+						}
+					}
+					else if (isStuck){
+						isStuck = false;
+					}
+				}
+				else if (isStuck){
+					isStuck = false;
+				}
+		}
+	}
+	
+	private void checkBlocker()
+	{
+		//check to see if blocker is in spot we want to move to
+		for (Blocker blocker : getBlockersArray()){
+			if (blocker.isBrickWall()){
+				if (Intersector.overlapConvexPolygons(blocker.getPolygon(), this.getPolygonBody())){
+					block();
+					break;
+				}
+				else if (isBlocked)
+					isBlocked = false;
+			}
+			else if (blocker.getRect().overlaps(body)){
+				block();
+				break;
+			}
+			else if (isBlocked)
+				isBlocked = false;
+		}
+	}
+	
+	public void block()
+	{
+		body.x = getX();
+		body.y = getY();
+		isBlocked = true;
+	}
+	
+	private void checkTargetRange()
+	{
+		if (!compareRect(getRangeBox(), getFlag().getRect()))
+			getRangeBox().set(getFlag().getX() - range/2, getFlag().getY() - range/2, range, range);
+		
+		if (this.getRect().overlaps(rangeBox)){
+			inRange = true;
+			this.canMove = false;
+		}
+		else{
+			if (inRange)
+				inRange = false;
+			if (!canMove)
+				canMove = true;
+			setFlagTarget();
+		}
+	}
+	
+	private boolean compareRect(Rectangle rangeRect, Rectangle flagRect)
+	{
+		//returns true if same for our purposes
+		if ((flagRect.getX() + range/2 == rangeRect.getX()) && (flagRect.getY() + range/2 == rangeRect.getY())){
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	private Rectangle getRangeBox()
+	{
+		if (rangeBox == null){
+			rangeBox = new Rectangle();
+		}
+		return rangeBox;
+	}
+	
+	private Polygon getPolygonBody()
+	{
+		if (polyBody == null){
+			polyBody = new Polygon(new float[]{0,0,body.getWidth(),0,body.getWidth(),body.getHeight(),0,body.getHeight()});
+			polyBody.setOrigin(body.getWidth()/2, body.getHeight()/2);
+		}
+		polyBody.setPosition(body.getX(), body.getY());
+		polyBody.setRotation(this.getRotation());
+		return polyBody;
+	}
+}

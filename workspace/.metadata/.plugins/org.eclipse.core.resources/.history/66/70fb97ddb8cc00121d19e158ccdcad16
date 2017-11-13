@@ -1,0 +1,125 @@
+package com.JustMoser.ZombieCommander;
+
+import android.app.Activity;
+
+import com.JustMoser.ZombieCommander.Helper.GameServices;
+import com.JustMoser.ZombieCommander.Helper.ProfileManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.MusicManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Screens.SplashScreen;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.FPSLogger;
+
+/**
+ * The game's main class, called as application events are fired.
+ */
+public class Tyrian extends Game
+{
+    // constant useful for logging
+    public static final String LOG = Tyrian.class.getSimpleName();
+
+    // a libgdx helper class that logs the current FPS each second
+    private FPSLogger fpsLogger;
+    private ProfileManager profileManager;
+    private SoundManager soundManager;
+    private MusicManager musicManager;
+    private GameServices gameServices;
+    private Activity androidActivity;
+    
+
+    public Tyrian()
+    {
+    	
+    }
+    
+    public Tyrian(Activity androidActivity)
+    {
+    	this.androidActivity = androidActivity;
+    }
+
+    // Screen methods
+
+    public SplashScreen getSplashScreen()
+    {
+        return new SplashScreen( this );
+    }
+
+
+
+    @Override
+    public void create()
+    {
+        Gdx.app.log( Tyrian.LOG, "Creating game" );
+        fpsLogger = new FPSLogger();
+        
+        // create the sound manager
+        soundManager = new SoundManager();
+        // create the sound manager
+        musicManager = new MusicManager();
+
+        // create the profile manager
+        profileManager = new ProfileManager();
+        profileManager.retrieveProfile();
+        
+        //Game Services
+        if (androidActivity != null)
+        	gameServices = new GameServices(androidActivity);
+ 
+        setScreen( getSplashScreen() );
+    }
+
+    @Override
+    public void resize(
+        int width,
+        int height )
+    {
+        super.resize( width, height );
+        Gdx.app.log( Tyrian.LOG, "Resizing game to: " + width + " x " + height );
+    }
+
+    @Override
+    public void render()
+    {
+        super.render();
+
+        // output the current FPS
+        fpsLogger.log();
+    }
+
+    @Override
+    public void pause()
+    {
+        super.pause();
+        Gdx.app.log( Tyrian.LOG, "Pausing game" );
+        // persist the profile, because we don't know if the player will come
+        // back to the game
+        profileManager.persist();
+    }
+
+    @Override
+    public void resume()
+    {
+        super.resume();
+        Gdx.app.log( Tyrian.LOG, "Resuming game" );
+    }
+
+    @Override
+    public void setScreen(Screen screen )
+    {
+        super.setScreen( screen );
+        Gdx.app.log( Tyrian.LOG, "Setting screen: " + screen.getClass().getSimpleName() );
+    }
+    @Override
+    public void dispose()
+    {
+        super.dispose();
+        Gdx.app.log( Tyrian.LOG, "Disposing game" );
+        
+        // dipose some services
+        //musicManager.dispose();
+        soundManager.dispose();
+        musicManager.dispose();
+    }
+}

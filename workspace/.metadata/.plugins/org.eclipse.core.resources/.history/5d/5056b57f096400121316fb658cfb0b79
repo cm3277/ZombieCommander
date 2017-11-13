@@ -1,0 +1,58 @@
+package com.me.tyrian.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+
+public class AbstractImage extends Image {
+	
+	//protected final Tyrian game;
+    
+    private static TextureAtlas zombieAtlas;
+    static Array<AtlasRegion> zombieRegions;
+    private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+
+
+
+    public AbstractImage(TextureRegion firstRegion )
+    {
+    	super(firstRegion);
+        //this.game = game;
+        
+    }
+    
+    public static TextureAtlas getZombieAtlas()
+    {
+        if( zombieAtlas == null ) {
+        	zombieAtlas = new TextureAtlas( Gdx.files.internal( "zombies/zombieTextures.pack" ) );
+        }
+        return zombieAtlas;
+    }
+    
+    public static Array<AtlasRegion> getZombieRegions()
+    {
+    	if (zombieRegions == null) {
+    		zombieRegions = getZombieAtlas().findRegions( "Zombies");
+    	}
+    	return zombieRegions;
+    }
+    
+    public static Map<TextureRegion,Drawable> getZombieAnimDrawable()
+    {
+    	Array<AtlasRegion> zombieAnim = getZombieRegions();
+    	zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+        for( AtlasRegion region : zombieAnim ) {
+        	zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+        }
+        return zombieAnimDrawables;
+    }
+
+}

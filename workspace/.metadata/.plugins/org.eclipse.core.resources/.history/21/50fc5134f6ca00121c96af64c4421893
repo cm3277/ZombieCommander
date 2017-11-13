@@ -1,0 +1,58 @@
+package com.me.tyrian.Helper;
+
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.OrderedMap;
+import com.badlogic.gdx.utils.Json.Serializable;
+
+public class AchievementManager implements Serializable{
+	
+	private static int numZombiesSpawned[];
+	private static int NOOBZOMBIES = 3;
+	private static int MASTERZOMBIES = 100;
+	
+	public AchievementManager()
+	{
+		numZombiesSpawned = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0};
+	}
+	
+	public static void addZombiesSpawned(int zombieType)
+	{
+		numZombiesSpawned[zombieType]++;
+		if (numZombiesSpawned[zombieType] == NOOBZOMBIES){
+			//unlock noob achievement
+		}
+		else if (numZombiesSpawned[zombieType] == MASTERZOMBIES){
+			//unlock master 
+		}
+	}
+	
+	public static int getNumZombiesSpawned(int zombieType)
+	{
+		return numZombiesSpawned[zombieType];
+	}
+	
+	public static int getNumNoobZombies()
+	{
+		return NOOBZOMBIES;
+	}
+	
+	public static int getNumMasterZombies()
+	{
+		return MASTERZOMBIES;
+	}
+	
+	// Serializable implementation 
+    @Override
+    public void read(Json json, OrderedMap<String,Object> jsonData )
+    {
+        // read the some basic properties
+    	numZombiesSpawned = json.readValue( "numZombiesSpawned", int[].class, jsonData );
+    }
+ 
+    @Override
+    public void write(Json json )
+    {
+        json.writeValue( "numZombiesSpawned", numZombiesSpawned );
+    }
+
+}

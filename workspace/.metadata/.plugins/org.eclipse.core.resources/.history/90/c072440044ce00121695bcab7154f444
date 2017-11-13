@@ -1,0 +1,125 @@
+package com.JustMoser.ZombieCommander.Tutorial;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.delay;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.AbstractImage;
+import com.JustMoser.ZombieCommander.ImageActors.DialogBox;
+import com.JustMoser.ZombieCommander.ImageActors.Fog;
+import com.JustMoser.ZombieCommander.Screens.Levels.SnD.Pack1.SnDPack1Level1;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.actions.RepeatAction;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+
+public class SnDTutorial extends Actor{
+	
+	private int tutorialLevel;
+	private DialogBox dialogBox;
+	private Label lblInfoHint;
+	private boolean nextTutStep;
+	
+	public SnDTutorial()
+	{
+		tutorialLevel = 0;
+	}
+	
+	@Override
+	public void act(float delta)
+	{
+		if (!AbstractImage.getPaused()){
+			if (tutorialLevel == 0){
+				doTut0();
+			}
+			else if (tutorialLevel == 1){
+				doTut1();
+			}
+			else if (tutorialLevel == 2){
+				doTut2();
+			}
+			else {
+				doEndTut();
+			}
+		}
+	}
+	
+	private void nextStep()
+	{
+		tutorialLevel++;
+		nextTutStep = false;
+	}
+	
+	private void doTut0()
+	{
+		if (dialogBox == null){
+			dialogBox = new DialogBox(480/2,Gdx.app.getGraphics().getHeight()/2,"Welcome! In Search and Destroy the objective is no longer" +
+					" to kill all Humans but to destroy thier treasure chests!");
+			this.getStage().addActor(dialogBox);
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut1()
+	{
+		if (nextTutStep == false){
+			dialogBox.setText("Use your zombies to clear the fog and find the chests! Then command your zombies to destroy the chests to win!");
+			this.getStage().addActor(dialogBox);
+			
+			nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblHint.remove();
+			nextStep();
+		}
+	}
+	
+	private void doTut2()
+	{
+		if (nextTutStep == false){
+			dialogBox.setText("I'll make it easy and point out the first chest for you. Good luck!");
+			this.getStage().addActor(dialogBox);
+			lblInfoHint = new Label("Destroy!", AbstractImage.getSkin());
+			lblInfoHint.setColor(Color.RED);
+			lblInfoHint.setPosition(SnDPack1Level1.getChest().getX() - lblInfoHint.getWidth()/2, SnDPack1Level1.getChest().getY() - lblInfoHint.getHeight()/2);
+			lblInfoHint.addAction(getRepeatFade());
+			this.getStage().addActor(lblInfoHint);
+			Rectangle recHint = new Rectangle(lblInfoHint.getX(), lblInfoHint.getY(), lblInfoHint.getWidth(), lblInfoHint.getHeight());
+			for(Fog fog: AbstractImage.getFogArray()){
+				if (recHint.overlaps(fog.getRect())){
+					fog.fadeAway();
+				}
+			}
+			nextTutStep = true;
+		}
+		else if (!dialogBox.getActive()){
+			//lblInfoHint.remove();
+			LevelManager.setTutorialFinished(LevelManager.getSearchAndDestroy());
+			nextStep();
+		}
+	}
+	
+	private void doEndTut()
+	{
+		if (!SnDPack1Level1.getChest().getAlive()){
+			lblInfoHint.remove();
+		}
+	}
+	
+	private Action getRepeatFade()
+	{
+		RepeatAction fade = new RepeatAction();
+		fade.setCount(-1);
+		fade.setAction(sequence( fadeIn( 0.5f ), delay( 1f ), fadeOut( 0.5f )));
+		return fade;
+	}
+
+}

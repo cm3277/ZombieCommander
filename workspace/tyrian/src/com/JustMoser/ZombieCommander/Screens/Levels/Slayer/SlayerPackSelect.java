@@ -1,0 +1,149 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.Slayer;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.AchievementManager;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.Screens.AbstractScreen;
+import com.JustMoser.ZombieCommander.Screens.MenuScreen;
+import com.JustMoser.ZombieCommander.Screens.Levels.Slayer.Pack1.Pack1LevelSelect;
+import com.JustMoser.ZombieCommander.Screens.Levels.Slayer.Pack2.SlayerPack2LevelSelect;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class SlayerPackSelect extends AbstractScreen
+{
+	//private static Image backgroundImage;
+	private Table notUnlockedTable;
+	private Table table;
+	
+    public SlayerPackSelect(Tyrian game )
+    {
+        super( game );
+    }
+    
+    @Override
+    public void show()
+    {
+        super.show();
+
+        // let's make sure the stage is clear
+        //stage.clear();
+
+        // and finally we add the actor to the stage
+        stage.addActor( getMenuBackgroundImage() );
+        
+        //do table 
+        getMenuTable();
+        
+
+    }
+    
+    private Table getMenuTable()
+    {
+    	//Make the Menu table
+        table = super.getTable();
+        table.clear();
+        //table.setPosition(480/2, 800 * 0.8f);
+        Label lblWelcome = new Label("Slayer Pack Selection", super.getSkin());
+        lblWelcome.setWrap(true);
+        lblWelcome.setAlignment(1);
+        lblWelcome.setPosition(480*0.1f, 800 * 0.9f);
+        //lblWelcome.setWidth(Gdx.app.getGraphics().getWidth());
+        //table.add( lblWelcome ).expandX().fill().spaceBottom(50);
+        //table.row();
+        stage.addActor(lblWelcome);
+        //levell 1
+    	final Button b1 = new Button(super.getSkin());
+    	b1.add("Beginner Pack");
+    	b1.setColor(Color.GREEN);
+    	table.add(b1).padRight(25).padLeft(25).padTop(100).expand().fill().row().space(50);
+    	
+    	b1.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                game.setScreen( new Pack1LevelSelect( game ) );
+            }
+    	});
+    	
+    	//pack 2
+    	final Button b2 = new Button(super.getSkin());
+    	b2.add("Advanced Pack");
+    	b2.setColor(Color.BLUE);
+    	table.add(b2).padRight(25).padLeft(25).expand().fill().row().space(50);
+    	
+    	b2.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                if (AchievementManager.getLevelPackMaster(LevelManager.getSlayerPackId(2)))
+                	game.setScreen( new SlayerPack2LevelSelect( game ) );
+                else
+                	enableNotUnlockedTable();
+            }
+    	});
+    	
+    	final Button menuButton = new Button(super.getSkin());
+    	menuButton.add("Exit to Menu");
+    	table.add(menuButton).padRight(25).padLeft(25).padBottom(100).expand().fill();
+    	
+    	menuButton.addListener(new ClickListener() {
+    		@Override
+    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchUp( event, x, y, pointer, button );
+                game.setScreen( new MenuScreen( game ) );
+            }
+    	});
+    	return table;
+    }
+    
+    private void enableNotUnlockedTable()
+    {
+    	table.setVisible(false);
+    	stage.addActor(getNotUnlockedTable());
+    	getNotUnlockedTable().toFront();
+    }
+    
+    private void disableNotUnlockedTable()
+    {
+    	table.setVisible(true);
+    	getNotUnlockedTable().remove();
+    }
+    
+    private Table getNotUnlockedTable()
+    {
+    	if (notUnlockedTable == null){
+	    	notUnlockedTable = new Table(getSkin());
+	    	notUnlockedTable.setFillParent( true );
+	    	notUnlockedTable.add("").row();
+	    	Label lblWarning = new Label("", super.getSkin());
+	    	lblWarning.setText("You do not have the Slayer Advanced Level Pack unlocked. You need to Unlock Slayer Master first (requires beating every level of the Slayer Beginner Pack levels).");
+	    	lblWarning.setWrap(true);
+	    	lblWarning.setAlignment(1);
+	    	notUnlockedTable.add( lblWarning ).padRight(25).padLeft(25).padTop(100).expandX().fill().space(50).row();
+	    	
+	    	Button okayButton = new Button(super.getSkin());
+	    	okayButton.add("OK");
+	    	
+	    	notUnlockedTable.add(okayButton).padRight(25).padLeft(25).padBottom(50).expand().fill();
+	    	
+	    	okayButton.addListener(new ClickListener() {
+	    		@Override
+	    		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+	            {
+	                super.touchUp( event, x, y, pointer, button );
+	                disableNotUnlockedTable();
+	            }
+	    	});
+    	}
+    	return notUnlockedTable;
+    	
+    }
+}

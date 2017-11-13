@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="assets"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="lib" path="libs/gdx.jar" sourcepath="libs/gdx-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="/SwarmConnect/libs/Swarm.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/Cody/Documents/AndroidDevelopment/adt-bundle-windows-x86_64/sdk/platforms/android-17/android.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

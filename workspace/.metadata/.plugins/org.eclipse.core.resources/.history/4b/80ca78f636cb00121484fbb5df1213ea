@@ -1,0 +1,110 @@
+package com.me.tyrian.Helper.Audio;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Disposable;
+import com.me.tyrian.Tyrian;
+ 
+/**
+ * A service that manages the background music.
+ * <p>
+ * Only one music may be playing at a given time.
+ */
+public class MusicManager implements Disposable
+{
+    /**
+     * The available music files.
+     */
+    public enum CustomMusic
+    {
+        MENUMUSIC( "music/MenuMusic.ogg" ),
+        LEVELMUSIC1( "music/LevelMusic1.ogg" ),
+        LEVELMUSIC2( "music/LevelMusic2.ogg" );
+
+        private String fileName;
+        private Music musicResource;
+ 
+        private CustomMusic(String fileName )
+        {
+            this.fileName = fileName;
+        }
+ 
+        public String getFileName()
+        {
+            return fileName;
+        }
+ 
+        public Music getMusicResource()
+        {
+            return musicResource;
+        }
+ 
+        public void setMusicResource(Music musicBeingPlayed )
+        {
+            this.musicResource = musicBeingPlayed;
+        }
+    }
+
+    /**
+     * Holds the music currently being played, if any.
+     */ 
+    private static CustomMusic musicBeingPlayed;
+
+    /**
+     * Creates the music manager.
+     */
+    public MusicManager()
+    {
+    	//
+    }
+
+    /**
+     * Plays the given music (starts the streaming).
+     * <p>
+     * If there is already a music being played it is stopped automatically.
+     */
+    public static void play(CustomMusic music )
+    {
+        // check if the given music is already being played
+        if( musicBeingPlayed == music ) return;
+ 
+        // stop any music being played
+        stop();
+
+        // start streaming the new music
+        FileHandle musicFile = Gdx.files.internal( music.getFileName() );
+        Music musicResource = Gdx.audio.newMusic( musicFile );
+        musicResource.setVolume( 0.4f );
+        musicResource.setLooping( true );
+        musicResource.play();
+        
+        // set the music being played
+        musicBeingPlayed = music;
+        musicBeingPlayed.setMusicResource( musicResource );
+    }
+
+ 
+    /**
+     * Stops and disposes the current music being played, if any.
+     */
+    public static void stop()
+    {
+        if( musicBeingPlayed != null ) {
+            Gdx.app.log( Tyrian.LOG, "Stopping current music" );
+            Music musicResource = musicBeingPlayed.getMusicResource();
+            musicResource.stop();
+            musicResource.dispose();
+            musicBeingPlayed = null;
+        }
+    }
+
+    /**
+     * Disposes the music manager.
+     */
+    public void dispose()
+    {
+        Gdx.app.log( Tyrian.LOG, "Disposing music manager" );
+        stop();
+    }
+}

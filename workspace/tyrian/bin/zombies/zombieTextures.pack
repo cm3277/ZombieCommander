@@ -1,0 +1,180 @@
+
+zombieTextures.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+MenuBack
+  rotate: false
+  xy: 1, 322
+  size: 380, 700
+  orig: 380, 700
+  offset: 0, 0
+  index: -1
+SelectText
+  rotate: false
+  xy: 1, 220
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+WalkerSelect
+  rotate: false
+  xy: 383, 922
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+MeatHeadSelect
+  rotate: false
+  xy: 1, 118
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+BangerSelect
+  rotate: false
+  xy: 103, 220
+  size: 100, 100
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
+zSpawn
+  rotate: false
+  xy: 383, 860
+  size: 80, 60
+  orig: 80, 60
+  offset: 0, 0
+  index: -1
+MeatHeadDead
+  rotate: false
+  xy: 1, 41
+  size: 50, 75
+  orig: 50, 75
+  offset: 0, 0
+  index: -1
+Meathead
+  rotate: false
+  xy: 103, 167
+  size: 51, 51
+  orig: 51, 51
+  offset: 0, 0
+  index: 1
+Meathead
+  rotate: false
+  xy: 205, 269
+  size: 50, 51
+  orig: 50, 51
+  offset: 0, 0
+  index: 0
+Target
+  rotate: false
+  xy: 383, 808
+  size: 50, 50
+  orig: 50, 50
+  offset: 0, 0
+  index: -1
+SelectTool
+  rotate: false
+  xy: 257, 270
+  size: 50, 50
+  orig: 50, 50
+  offset: 0, 0
+  index: -1
+BangerWalk
+  rotate: false
+  xy: 485, 986
+  size: 26, 36
+  orig: 26, 36
+  offset: 0, 0
+  index: 1
+Sandbags
+  rotate: false
+  xy: 1, 8
+  size: 40, 31
+  orig: 40, 31
+  offset: 0, 0
+  index: -1
+Human
+  rotate: false
+  xy: 53, 73
+  size: 27, 43
+  orig: 27, 43
+  offset: 0, 0
+  index: -1
+HumanDead
+  rotate: false
+  xy: 103, 122
+  size: 27, 43
+  orig: 27, 43
+  offset: 0, 0
+  index: -1
+HumanReload
+  rotate: false
+  xy: 156, 175
+  size: 27, 43
+  orig: 27, 43
+  offset: 0, 0
+  index: -1
+ZombieDead
+  rotate: false
+  xy: 205, 227
+  size: 27, 40
+  orig: 27, 40
+  offset: 0, 0
+  index: -1
+BangerWalk
+  rotate: false
+  xy: 383, 770
+  size: 25, 36
+  orig: 25, 36
+  offset: 0, 0
+  index: 0
+ZombieAttack
+  rotate: false
+  xy: 309, 290
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: 1
+ZombieWalk
+  rotate: false
+  xy: 341, 290
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: 0
+ZombieWalk
+  rotate: false
+  xy: 435, 828
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: 1
+ZombieAttack
+  rotate: false
+  xy: 53, 41
+  size: 30, 30
+  orig: 30, 30
+  offset: 0, 0
+  index: 0
+blood
+  rotate: false
+  xy: 485, 959
+  size: 25, 25
+  orig: 25, 25
+  offset: 0, 0
+  index: -1
+HealthBar
+  rotate: false
+  xy: 1, 1
+  size: 35, 5
+  orig: 35, 5
+  offset: 0, 0
+  index: -1
+Bullet
+  rotate: false
+  xy: 43, 28
+  size: 2, 11
+  orig: 2, 11
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,63 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager.SoundEffects;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+
+public class SniperHuman extends Human{
+	
+	//animation
+	private static TextureRegion humanRegion;
+	private static TextureRegionDrawable humanAnimDrawables;
+	private float bulletDelay = 1f;
+	private int maxAmmo = 2;
+	private int range = 500;
+
+	public SniperHuman(TextureRegion animationRegion, float x, float y, boolean middle) 
+	{
+		super(animationRegion, x, y, middle);
+		this.setBulletDelay(bulletDelay);
+		this.setMaxAmmo(maxAmmo);
+		this.setRange(range);
+	}
+	
+	public static SniperHuman create(float x, float y)
+    {
+		if (humanRegion == null) {
+			humanRegion = getZombieAtlas().findRegion( "SniperHuman");
+		}
+		if (humanAnimDrawables == null) {
+    		humanAnimDrawables = new TextureRegionDrawable(humanRegion);
+    	}
+        return new SniperHuman(humanRegion, x, y, false);
+    }
+	
+	public static SniperHuman createCenter(float x, float y)
+    {
+		if (humanRegion == null) {
+			humanRegion = getZombieAtlas().findRegion( "SniperHuman");
+		}
+		if (humanAnimDrawables == null) {
+    		humanAnimDrawables = new TextureRegionDrawable(humanRegion);
+    	}
+        return new SniperHuman(humanRegion, x, y, true);
+    }
+	
+	@Override
+	public void setAnimation()
+	{
+		if (this.getDrawable() != humanAnimDrawables)
+			setDrawable(humanAnimDrawables);
+	}
+	
+	@Override
+	public void createBullet()
+	{
+		SoundManager.play(SoundEffects.SNIPERGUNSHOT, 1f);
+		Bullet bullet = Bullet.createSniper(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+		bullet.setRotation(getRotation());
+		getStage().addActor(bullet);
+	}
+
+}

@@ -1,0 +1,103 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+
+public class HumanTeleporter extends AbstractImage{
+	
+	private static int HUMAN = 0;
+	private static int MACHINEGUNNER = 1;
+	private static int SNIPER = 2;
+	private static TextureRegion teleRegion;
+	private int humanTypeId;
+	private Human human;
+	private float humanSpawnTimer = 0f;
+	private float humanSpawnDelay = 6f;
+	private boolean setHumanDelay = false;
+	
+	public HumanTeleporter(float x, float y, int humanType) {
+		super(teleRegion);
+		this.setPosition(x, y);
+		humanTypeId = humanType;
+		if (humanTypeId == MACHINEGUNNER){
+			this.setColor(Color.GREEN);
+		}
+		else if (humanTypeId == SNIPER){
+			this.setColor(Color.RED);
+		}
+		else if (humanTypeId == HUMAN){
+			this.setColor(Color.BLUE);
+		}
+	}
+	
+	public static HumanTeleporter create(float x, float y )
+	{
+		
+	        
+	    return new HumanTeleporter(x, y, HUMAN);
+	}
+	
+	
+	public static HumanTeleporter createMachineGunner(float x, float y )
+	{
+		
+	        
+	    return new HumanTeleporter(x, y, MACHINEGUNNER);
+	}
+	
+	public static HumanTeleporter createSniper(float x, float y )
+	{
+		
+	        
+	    return new HumanTeleporter(x, y, SNIPER);
+	}
+	
+	public static void loadAssets()
+	{
+		//if (teleRegion == null) {
+			teleRegion = getZombieAtlas().findRegion( "HumanTeleporter");
+		//}
+	}
+	
+	private void respawnHuman()
+	{
+		if (humanTypeId == MACHINEGUNNER){
+			human = MachineGunHuman.createCenter(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+		}
+		else if (humanTypeId == SNIPER){
+			human = SniperHuman.createCenter(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+		}
+		else if (humanTypeId == HUMAN){
+			human = Human.createCenter(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+		}
+		this.getStage().addActor(human);
+		human.addAction( sequence( fadeOut( 0f ), fadeIn(0.8f)));
+	}
+	
+	@Override
+    public void publicAct(float delta )
+    {
+		if (!setHumanDelay){
+			for (@SuppressWarnings("unused") Human human: getHumanArray()){
+				humanSpawnDelay++;
+			}
+			setHumanDelay = true;
+		}
+		if (human == null){
+			respawnHuman();
+		}
+		else if (!human.getAlive()){
+			if (humanSpawnTimer <= humanSpawnDelay)
+				humanSpawnTimer += delta;
+			else{
+				humanSpawnTimer = 0f;
+				respawnHuman();
+			}
+		}
+    }
+
+}

@@ -1,0 +1,193 @@
+package com.me.tyrian.ImageActors;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.me.tyrian.Helper.ClassType;
+import com.me.tyrian.Helper.RoundHelper;
+
+public class SpawnMenu extends AbstractImage{
+
+	 public SpawnMenu() {
+		 super();
+		// TODO Auto-generated constructor stub
+	}
+
+	private static Table table;
+	private static int lblNumZombiesToSpawn = 0;
+    private static Label numToSpawn;
+    private static Label lblTypeToSpawn;
+    private static int iTypeToSpawn = 1;
+    private static Image menuImage;//need to do zombieSpawn for spider to be finished!
+    private static ZombieSpawn zombieSpawn;
+	
+	public static void enable(ZombieSpawn zSpawn)
+	{
+		//get zombie spawn location that enabled us
+		zombieSpawn = zSpawn;
+		getMenuImage().setVisible(true);
+		getMenuImage().toFront();
+		getTable().setVisible(true);
+		getTable().toFront();
+	}
+	
+	public static void disable(boolean resume)
+	{
+		getMenuImage().setVisible(false);
+		getTable().setVisible(false);
+		if (resume)
+			setPaused(false);
+	}
+	
+	public static void changeSpawnType(int zombieType)
+	{
+		if (ClassType.isBanger(zombieType)){
+			lblTypeToSpawn.setText("Banger");
+			iTypeToSpawn = ClassType.getBanger();
+		}
+		else if (ClassType.isAssassin(zombieType)){
+			lblTypeToSpawn.setText("Assassin");
+			iTypeToSpawn = ClassType.getAssassin();
+		}
+		else if (ClassType.isSpider(zombieType)){
+			lblTypeToSpawn.setText("Spider Queen");
+			iTypeToSpawn = ClassType.getSpider();
+		}
+		else if (ClassType.isBat(zombieType)){
+			lblTypeToSpawn.setText("Hell Bats");
+			iTypeToSpawn = ClassType.getBat();
+		}
+		else if (ClassType.isRider(zombieType)){
+			lblTypeToSpawn.setText("Wolf Rider");
+			iTypeToSpawn = ClassType.getRider();
+		}
+		else if (ClassType.isHunter(zombieType)){
+			lblTypeToSpawn.setText("Hunter");
+			iTypeToSpawn = ClassType.getHunter();
+		}
+		else if (ClassType.isMeatHead(zombieType)){
+			lblTypeToSpawn.setText("Meathead");
+			iTypeToSpawn = ClassType.getMeatHead();
+		}
+		else{
+			lblTypeToSpawn.setText("Walker");
+			iTypeToSpawn = ClassType.getZombie();
+		}
+		
+	}
+	
+	public static int getTypeToSpawn()
+	{
+		return iTypeToSpawn;
+	}
+	
+	private static Table getTable()
+    {
+        if( table == null ) {
+            table = new Table(getSkin());
+            table.setPosition(getMenuImage().getX(), getMenuImage().getY());
+            table.setWidth(getMenuImage().getWidth());
+            table.setHeight(getMenuImage().getHeight());
+            table.add("").row();
+            //Table Title
+            table.add("Zombie Spawner").spaceBottom(20).colspan(2).row();
+            //Zombie type button
+            Button zombieTypeButton = new Button(getSkin());
+            zombieTypeButton.add("Choose Zombies");
+            table.add(zombieTypeButton).spaceBottom(20).colspan(2).row();
+            //Current Zombie Type Label
+            table.add("Current Type:").spaceBottom(20).colspan(2).row();
+            //create label that gets set to the different types
+            lblTypeToSpawn = new Label("Walker", getSkin());
+            lblTypeToSpawn.setColor(Color.BLACK);
+            table.add(lblTypeToSpawn).spaceBottom(20).colspan(2).row();
+            //Num of zombies to spawn label
+            numToSpawn = new Label("To Spawn: " + lblNumZombiesToSpawn, getSkin());
+            numToSpawn.setColor(Color.BLACK);
+            table.add(numToSpawn).spaceBottom(20).colspan(2).row();
+            //- num to spawn button
+            Button decNumToSpawn = new Button(getSkin());
+            decNumToSpawn.add(" - ");
+            table.add(decNumToSpawn).spaceBottom(20);
+            //+ num to spawn button
+            Button incNumToSpawn = new Button(getSkin());
+            incNumToSpawn.add(" + ");
+            table.add(incNumToSpawn).spaceBottom(20).row();//colspan is key
+            //spawn zombies button
+            Button spawnZombieButton = new Button(getSkin());
+            spawnZombieButton.add("Spawn Zombies");
+            table.add(spawnZombieButton).spaceBottom(20).colspan(2).row();
+            //Exit button
+            Button exitButton = new Button(getSkin());
+            exitButton.add("Exit");
+            table.add(exitButton).colspan(2);
+            table.setVisible(false);
+            addToStage(table);
+            
+            //button listener
+            spawnZombieButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (zombieSpawn != null)
+                    	zombieSpawn.onSpawnZombieClicked(lblNumZombiesToSpawn);
+                    	RoundHelper.minusNumZombiesCanSpawn(lblNumZombiesToSpawn);
+                }
+        	});
+            zombieTypeButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    ZTypeMiniScreen.enable();
+                }
+        	});
+            exitButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disable(true);
+                }
+        	});
+            incNumToSpawn.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (lblNumZombiesToSpawn < RoundHelper.getNumZombiesCanSpawn())
+                    	lblNumZombiesToSpawn++;
+                    numToSpawn.setText("To Spawn: " + lblNumZombiesToSpawn);
+                }
+        	});
+            decNumToSpawn.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    if (lblNumZombiesToSpawn > 0)
+                    	lblNumZombiesToSpawn--;
+                    numToSpawn.setText("To Spawn: " + lblNumZombiesToSpawn);
+                }
+        	});
+        }
+        return table;
+    }
+	
+	private static Image getMenuImage()
+    {
+    	if (menuImage == null) {
+    		menuImage = new Image(getZombieAtlas().findRegion( "MenuBack"));
+    		menuImage.setVisible(false);
+    		menuImage.setPosition(Gdx.app.getGraphics().getWidth()/2 - menuImage.getWidth()/2, Gdx.app.getGraphics().getHeight()/2 - menuImage.getHeight()/2);
+    		addToStage(menuImage);
+    	}
+    	return menuImage;
+    }
+}

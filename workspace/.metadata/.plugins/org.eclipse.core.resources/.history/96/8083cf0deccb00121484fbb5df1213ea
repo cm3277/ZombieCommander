@@ -1,0 +1,336 @@
+package com.me.tyrian.ImageActors;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.delay;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeIn;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.sequence;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.moveTo;
+
+import com.JustMoser.ZombieCommander.Helper.ProfileManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager;
+import com.JustMoser.ZombieCommander.Helper.Audio.SoundManager.SoundEffects;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.Action;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class Brain extends AbstractImage{
+	
+	private static TextureRegion brainRegion;
+	private boolean isActive;
+	private int whiteGoldFadeNum;
+	private float whiteGoldFadeTimer;
+	private float whiteGoldFadeDelay = 0.2f;
+	private static float selfDestructDelay = 15f;
+	private int brainValue;
+	private static float brainSpawnDistance = 80f;
+	private Action toggleCanColor;
+	private float startX;
+	private float startY;
+	private float randomYDistance;
+	private float randomXDistance;
+	private boolean canColor;
+	private boolean isGold;
+	//private boolean bounce = false;
+	private boolean travel;
+	private float lastXMove;
+	private float lastYMove;
+	
+	public Brain(TextureRegion region, float x, float y, int value, boolean travel, boolean isWalker)
+	{
+		super(region);
+		this.setPosition(x - this.getWidth()/2, y - this.getHeight()/2);
+		this.addAction(fadeOut(0f));
+		this.setOrigin(getWidth()/2, getHeight()/2);
+		getBrainArray().add(this);
+		isActive = true;
+		this.travel = travel;
+		whiteGoldFadeNum = 0;
+		whiteGoldFadeTimer = 0f;
+		if (!isWalker){
+			if (value >= 10){
+				brainValue = value;
+			}
+			else{
+				brainValue = 10;
+			}
+			//add (or subtract) random amount to value
+			brainValue += MathUtils.random(-5, 10);
+		}
+		else
+			brainValue += MathUtils.random(0, 1);
+		canColor = false;
+		isGold = !travel;
+		
+		if (isGold){
+			this.setColor(Color.YELLOW);
+		}
+		
+		//click listener
+		this.addListener(new ClickListener() {
+    		@Override
+    		public boolean touchDown(InputEvent event,float x,float y,int pointer,int button)
+            {
+                super.touchDown( event, x, y, pointer, button );
+                onBrainClick();
+                return true;
+            }
+    	});
+		
+		//move to random spot
+		randomXDistance = getRandomSpawnDistance();
+		randomYDistance = getRandomSpawnDistance();
+		startX = this.getX();
+		startY = this.getY();
+		checkBounds();
+		if (travel){
+			lastXMove = startX + randomXDistance;
+			lastYMove = startY + randomYDistance;
+			this.addAction(moveTo(lastXMove, lastYMove, 1f));
+		}
+		
+		//self destruct
+		this.addAction( sequence( fadeIn( 0.8f ), getActionToggleCanColor(), 
+				delay( selfDestructDelay*0.67f ), getActionFastFade(), delay( selfDestructDelay*0.33f ), getActionToggleCanColor(), fadeOut( 0.8f ),
+	            new Action() {
+	                @Override
+	                public boolean act(
+	                    float delta )
+	                {
+	                    // the last action will remove brain
+	                	destroy();
+	                    return true;
+	                }
+	            } ) );
+	}
+	
+	public Brain(TextureRegion region, float x, float y, int value, boolean travel)
+	{
+		this(region, x, y, value, travel, false);
+	}
+	
+	public static Brain create(float x, float y, int value, boolean travel)
+    {
+        // create the ship
+		return new Brain(getBrainRegion(), x, y, value, travel);
+    }
+	
+	public static Brain createLow(float x, float y, int value, boolean travel, boolean isWalker)
+    {
+        // create the ship
+		return new Brain(getBrainRegion(), x, y, value, travel, isWalker);
+    }
+	
+	public static TextureRegion getBrainRegion()
+	{
+		if (brainRegion == null) {
+			brainRegion = getZombieAtlas().findRegion( "Brain");
+		}
+		return brainRegion;
+	}
+	
+	private Action getActionToggleCanColor()
+	{
+		if (toggleCanColor == null){
+			toggleCanColor =  new Action() {
+                @Override
+                public boolean act(
+                    float delta )
+                {
+                    // toggles canColor
+                    if (canColor)
+                    	canColor = false;
+                    else
+                    	canColor = true;
+                    return true;
+                }
+            };
+		}
+		return toggleCanColor;
+	}
+	
+	private Action getActionFastFade()
+	{
+			Action fastFade =  new Action() {
+                @Override
+                public boolean act(
+                    float delta )
+                {
+                    // changes FadeDelay
+                	whiteGoldFadeDelay = 0.09f;
+                    return true;
+                }
+            };
+		return fastFade;
+	}
+	
+	private void onBrainClick()
+	{
+		ProfileManager.getProfile().addBrains(brainValue);
+		SoundManager.play(SoundEffects.BRAIN, 1f);
+		this.destroy();
+	}
+	
+	public void destroy()
+	{
+		isActive = false;
+		getBrainArray().removeValue(this, true);
+		this.remove();
+	}
+	
+	private float getRandomSpawnDistance()
+	{
+		float dist = MathUtils.random(-brainSpawnDistance, brainSpawnDistance);
+		if (dist >= 0)
+			dist += 40;
+		else
+			dist -= 40;
+		return dist;
+	}
+	
+	@Override
+    public void publicAct(float delta )
+    {
+		if (isActive){
+			slowRotate();
+			//if (!bounce)
+				checkBounds();
+			if (canColor && !isGold)
+				whiteGoldFade(delta);
+		}
+    }
+	
+	private void checkBounds()
+	{
+		if (this.getX() + this.getWidth() >= Gdx.app.getGraphics().getWidth()){
+			if (this.getX() == startX){
+					if (randomXDistance >= 0)
+					{
+						randomXDistance = -75;
+						if (!travel)
+							travel = true;
+					}
+			}
+			else{
+				bounceLargeX();
+			}
+			//bounce = true;
+		}
+		else if (this.getX() <= 0){
+			if (this.getX() == startX){
+					if (randomXDistance <= 0)
+					{
+						randomXDistance = 75;
+						if (!travel)
+							travel = true;
+					}
+					//bounce = true;
+			}
+			else{
+				bounceSmallX();
+			}
+			//bounce = true;
+		}
+		if (this.getY() + this.getHeight() >= Gdx.app.getGraphics().getHeight()){
+			if (this.getY() == startY){
+					if (randomYDistance >= 0)
+					{
+						randomYDistance = -75;
+						if (!travel)
+							travel = true;
+					}
+					//bounce = true;
+			}
+			else{
+				bounceLargeY();
+			}
+			//bounce = true;
+		}
+		else if (this.getY() <= 0){
+			if (this.getY() == startY){
+					if (randomYDistance <= 0)
+					{
+						randomYDistance = 75;
+						if (!travel)
+							travel = true;
+					}
+					//bounce = true;
+			}
+			else{
+				bounceSmallY();
+			}
+			//bounce = true;
+		}
+	}
+	
+	/*private void bounceBack()
+	{
+		this.removeAction(moveTo(startX + randomXDistance, startY + randomYDistance, 1f));
+		this.addAction(moveTo(startX - randomXDistance, startY - randomYDistance, 1f));
+	}*/
+	
+	private void bounceLargeX()
+	{
+		this.removeAction(moveTo(lastXMove, lastYMove, 1f));
+		lastXMove = this.getX() - 80 + MathUtils.random(-40, 40);
+		this.addAction(moveTo(lastXMove, lastYMove, 1f));
+	}
+	
+	private void bounceSmallX()
+	{
+		this.removeAction(moveTo(lastXMove, lastYMove, 1f));
+		lastXMove = this.getX() + 80 + MathUtils.random(-40, 40);
+		this.addAction(moveTo(lastXMove, lastYMove, 1f));
+	}
+	
+	private void bounceLargeY()
+	{
+		this.removeAction(moveTo(lastXMove, lastYMove, 1f));
+		lastYMove = this.getY() - 80 + MathUtils.random(-40, 40);
+		this.addAction(moveTo(lastXMove, lastYMove, 1f));
+	}
+	
+	private void bounceSmallY()
+	{
+		this.removeAction(moveTo(lastXMove, lastYMove, 1f));
+		lastYMove = this.getY() + 80 + MathUtils.random(-40, 40);
+		this.addAction(moveTo(lastXMove, lastYMove, 1f));
+	}
+	
+	private void slowRotate()
+	{
+		this.setRotation(getRotation() + 2f);
+	}
+	
+	private void whiteGoldFade(float delta)
+	{
+		//do zombie green fade in and out while healing
+		if (whiteGoldFadeNum == 0){
+			if (this.getColor() != Color.YELLOW)
+				this.setColor(Color.YELLOW);
+		}
+		if (whiteGoldFadeNum == 1){
+			if (this.getColor() != Color.WHITE)
+				this.setColor(Color.WHITE);
+		}
+		if (whiteGoldFadeTimer <= whiteGoldFadeDelay)
+			whiteGoldFadeTimer += delta;
+		else{
+			if (whiteGoldFadeNum < 1)
+				whiteGoldFadeNum++;
+			else
+				whiteGoldFadeNum = 0;
+			
+			whiteGoldFadeTimer = 0f;
+		}
+	}
+	
+	public boolean getIsActive()
+	{
+		return isActive;
+	}
+	
+}

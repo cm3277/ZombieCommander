@@ -1,0 +1,67 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.Slayer.Pack1;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.Human;
+import com.JustMoser.ZombieCommander.ImageActors.MachineGunHuman;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.Sandbag;
+import com.badlogic.gdx.math.Vector2;
+
+public class Level4Screen extends World1Level
+{
+    public Level4Screen(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(4));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+    }
+    
+    private void addHumans()
+    {
+    	Human localHuman2 = Human.create(stage.getWidth()*0.7f, 800*0.5f);
+    	stage.addActor(localHuman2);
+    	Human localHuman = Human.create(stage.getWidth()*0.3f - localHuman2.getWidth(), 800*0.5f);
+    	stage.addActor(localHuman);
+    	Human localHuman3 = MachineGunHuman.create(stage.getWidth()*0.5f - localHuman2.getWidth()/2, 800*0.75f);
+    	stage.addActor(localHuman3);
+    }
+    
+    public void addSpawns()
+    {
+    	ZombieSpawn zombieSpawn = ZombieSpawn.create(new Vector2(stage.getWidth()*0.8f,800*0.1f));
+        stage.addActor(zombieSpawn);
+        stage.addActor(ZombieSpawn.create(new Vector2(stage.getWidth()*0.2f - zombieSpawn.getWidth(),800*0.1f)));
+        //stage.addActor(ZombieSpawn.create(new Vector2(stage.getWidth()*0.2f,800*0.95f)));
+    }
+    
+    private void addBlockers()
+    {
+    	for (int i = 0; i < 9; i++){
+    		if (i == 4){
+    			stage.addActor(Sandbag.create((stage.getWidth()*0.04f + (50*i)) , 800*0.42f));
+    			i = 5;
+    		}
+    		else
+    			stage.addActor(Sandbag.create((stage.getWidth()*0.04f + (50*i)) , 800*0.35f));
+    		if (i == 2)
+    			i = 3;
+    	}
+    	BrickWall brickWall = BrickWall.create(stage.getWidth()*0.7f , 800*0.3f);
+    	brickWall.setRotation(45);
+    	stage.addActor(brickWall);
+    	
+    	BrickWall brickWall2 = BrickWall.create(stage.getWidth()*0.15f , 800*0.3f);
+    	brickWall2.setRotation(-45);
+    	stage.addActor(brickWall2);
+    	
+    	stage.addActor(BrickWall.create(stage.getWidth()*0.5f - brickWall2.getWidth()/2, 800*0.5f));
+    }
+}

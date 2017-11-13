@@ -1,0 +1,277 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.AchievementManager;
+import com.JustMoser.ZombieCommander.Helper.ClassType;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.UpgradeManager;
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class ZombieUpgradeScreen extends AbstractImage{
+	
+	private static Table upgradeTable;
+	private static Table upgradeTableBottom;
+	private static Image background;
+	private static Button exitButton;
+	private static Button selectZombie;
+	private static int selectedZombieType;
+	private static Button upgradeButton;
+	private static String zName;
+	private static TextureRegion zTexture;
+	private static int zombieStats[]= new int[] {0, 0, 0};
+
+	public ZombieUpgradeScreen(int zombieType, String zombieName, TextureRegion zombieTexture, int zombieHealth, int zombieDamage, int zombieSpeed) 
+	{
+		zName = zombieName;
+		zTexture = zombieTexture;
+		if (AchievementManager.getUnlockedZombie(zombieType))
+			enable(zombieType, zombieName, zombieTexture, zombieHealth, zombieDamage, zombieSpeed);
+		else
+			enableNotUnlockedTable(zombieType, zombieName, zombieTexture);
+	}
+	
+	public static ZombieUpgradeScreen createUpgradeScreen(int zombieType, String zombieName, TextureRegion zombieTexture, int zombieHealth, int zombieDamage, int zombieSpeed)
+	{
+		zombieStats[0] = zombieHealth;
+		zombieStats[1] = zombieDamage;
+		zombieStats[2] = zombieSpeed;
+		return new ZombieUpgradeScreen(zombieType, zombieName, zombieTexture, zombieHealth, zombieDamage, zombieSpeed);
+	}
+	
+	public void enableNotUnlockedTable(int zombieType, String zombieName, TextureRegion zombieTexture)
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		getStaticStage().addActor(getNotUnlockedTable(zombieType, zombieName, zombieTexture));
+		upgradeTable.setVisible(true);
+		upgradeTable.toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	public void enable(int zombieType, String zombieName, TextureRegion zombieTexture, int zombieHealth, int zombieDamage, int zombieSpeed)
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		getStaticStage().addActor(getUpgradeTable(zombieType, zombieName, zombieTexture, zombieHealth, zombieDamage, zombieSpeed));
+		getStaticStage().addActor(getUpgradeTableBottom(zombieType));
+		upgradeTable.setVisible(true);
+		upgradeTable.toFront();
+		upgradeTableBottom.setVisible(true);
+		upgradeTableBottom.toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	public static void disable()
+	{
+		getBackgroundImage().setVisible(false);
+		upgradeTable.setVisible(false);
+		upgradeTable.clear();
+		upgradeTable = null;
+		if (upgradeTableBottom != null){
+			upgradeTableBottom.setVisible(false);
+			upgradeTableBottom.clear();
+			upgradeTableBottom = null;
+		}
+	}
+	
+	private static Image getBackgroundImage()
+   {
+		if (background == null) {
+	   		background = new Image(getMenuBackgroundRegion());
+	   		background.setVisible(true);
+	   		//background.setColor(Color.BLACK);
+	   		background.setFillParent(true);
+		}
+		if (!getStaticStage().getActors().contains(background, true)){
+			getStaticStage().addActor(background);
+		}
+   		return background;
+   }
+	
+	private Table getNotUnlockedTable(int zombieType, String zombieName, TextureRegion zombieTexture)
+	{
+		if( upgradeTable == null ) {
+	    	upgradeTable = new Table(getSkin());
+	    	upgradeTable.setVisible(false);
+	        upgradeTable.setFillParent(true);
+	    	upgradeTable.add("").row();
+	        //Table Title
+	    	upgradeTable.add(zombieName).padTop(50).spaceBottom(50).row();
+	    	upgradeTable.add(new Image(zombieTexture)).space(15).row();
+	    	Label lblText = new Label(ZombieStats.getNeedsUnlock(zombieType), super.getSkin());
+    		lblText.setWrap(true);
+    		lblText.setAlignment(1);
+    		upgradeTable.add( lblText ).padRight(25).padLeft(25).expandX().fill().space(50).row();
+    		//Exit button
+     	   upgradeTable.add(getExitButton()).padRight(25).padLeft(25).expandX().fill().space(50);
+		}
+		return upgradeTable;
+	    	   
+	}
+	
+	private Table getUpgradeTable(int zombieType, String zombieName, TextureRegion zombieTexture, int zombieHealth, int zombieDamage, int zombieSpeed)
+   {
+       if( upgradeTable == null ) {
+    	   selectedZombieType = zombieType;
+    	   upgradeTable = new Table(getSkin());
+    	   upgradeTable.setVisible(false);
+    	   upgradeTable.setFillParent(true);
+    	   upgradeTable.setWidth(480*0.8f);
+    	   upgradeTable.align(Align.top);
+    	   upgradeTable.add("").row();
+           //Table Title
+    	   upgradeTable.add(zombieName).spaceTop(20).spaceBottom(15).colspan(2).row();
+    	   upgradeTable.add(new Image(zombieTexture)).space(20).colspan(2).row();
+    	   //health stat
+    	   upgradeTable.add("Health: " + UpgradeManager.getUpgradedHealth(zombieType, zombieHealth)).space(5).spaceTop(10).align(Align.left);
+    	   upgradeTable.add(healthImage(zombieHealth, zombieType)).spaceTop(30).align(Align.left).padRight(200).row();
+    	   //damage stat
+    	   upgradeTable.add("Damage: " + UpgradeManager.getUpgradedDamage(zombieType, zombieDamage)).space(5).spaceTop(10).align(Align.left);
+    	   upgradeTable.add(damageImage(zombieDamage, zombieType)).spaceTop(30).align(Align.left).padRight(200).row();
+    	   //speed stat
+    	   upgradeTable.add("Speed: " + UpgradeManager.getUpgradedSpeed(zombieType, zombieSpeed)).space(5).spaceTop(10).align(Align.left);
+    	   upgradeTable.add(speedImage(zombieSpeed, zombieType)).spaceTop(30).align(Align.left).padRight(200).row();
+    	   //Custom stat
+    	   if (ClassType.isHunter(zombieType)){
+    		   upgradeTable.add("Range: " + MathUtils.roundPositive(UpgradeManager.getUpgradedCustom(zombieType, HunterZombie.getRangeStartDimension()))).space(5).align(Align.left).row();
+    	   }
+    	   if (ClassType.isAssassin(zombieType)){
+    		   upgradeTable.add("Cloak Time: " + (UpgradeManager.getUpgradedCustom(zombieType, AssassinZombie.getDisguiseStartTime()))).colspan(2).align(Align.left).row();
+    	   }
+    	   if (ClassType.isHealWitch(zombieType)){
+    		   upgradeTable.add("Heal Radius: " + MathUtils.roundPositive(UpgradeManager.getUpgradedCustom(zombieType, 1)*(75/2))).colspan(2).align(Align.left).row();
+    	   }
+    	   //price 
+    	   Label priceLabel = new Label("Price: " + ZombieStats.getZombiePrice(zombieType), getSkin());
+   		   priceLabel.setColor(Color.RED);
+   		   upgradeTable.add(priceLabel).space(5).align(Align.right);
+   		   Image brainImage = new Image(Brain.getBrainRegion());
+   		   upgradeTable.add(brainImage).space(5).align(Align.left).row();
+   		   //Upgrade screen button
+   		   upgradeTable.add(getUpgradeButton()).padRight(25).padLeft(25).expandX().fill().space(10).colspan(2).row();
+    	   //zombie description
+    	   /*Label lblDescription = new Label(ZombieStats.getDescription(zombieType), super.getSkin());
+    	   lblDescription.setWrap(true);
+    	   lblDescription.setAlignment(1);
+    	   upgradeTable.add(lblDescription).colspan(2).expandX().fill().space(20).row();
+    	   upgradeTable.add(getExitButton()).space(20);
+    	   upgradeTable.add(getSelectZombieButton()).space(20).align(Align.left);*/
+       }
+       return upgradeTable;
+   }
+	
+	private Table getUpgradeTableBottom(int zombieType)
+	{
+		if( upgradeTableBottom == null ) {
+			upgradeTableBottom = new Table(getSkin());
+			upgradeTableBottom.setVisible(false);
+			upgradeTableBottom.setFillParent(true);
+			upgradeTableBottom.align(Align.bottom);
+			//zombie description
+	    	Label lblDescription = new Label(ZombieStats.getDescription(zombieType), super.getSkin());
+	    	lblDescription.setWrap(true);
+	    	lblDescription.setAlignment(1);
+	    	upgradeTableBottom.add(lblDescription).colspan(2).expandX().fill().space(20).row();
+	    	upgradeTableBottom.add(getExitButton()).padLeft(25).expandX().fill().space(20);
+	    	upgradeTableBottom.add(getSelectZombieButton()).padRight(25).expandX().fill().space(20);
+		}
+		return upgradeTableBottom;
+	}
+	
+	private Image healthImage(int zombieHealth, int zombieType)
+	{
+		Image health = new Image(HealthBar.getHealthBarRegion());
+		health.setColor(Color.RED);
+		health.setScaleY(5);
+		float scale = ((float)UpgradeManager.getUpgradedHealth(zombieType, zombieHealth)/(float)ZombieStats.getHighestHealth());
+		health.setScaleX(7*scale); //(zombieHealth/ZombieStats.getHighestHealth())
+		return health;
+	}
+	
+	private Image damageImage(int zombieDamage, int zombieType)
+	{
+		Image damage = new Image(HealthBar.getHealthBarRegion());
+		damage.setColor(Color.RED);
+		damage.setScaleY(5);
+		float scale = ((float)UpgradeManager.getUpgradedDamage(zombieType, zombieDamage)/(float)ZombieStats.getHighestDamage());
+		damage.setScaleX(7*scale); //(zombieHealth/ZombieStats.getHighestHealth())
+		return damage;
+	}
+	
+	private Image speedImage(int zombieSpeed, int zombieType)
+	{
+		Image speed = new Image(HealthBar.getHealthBarRegion());
+		speed.setColor(Color.RED);
+		speed.setScaleY(5);
+		float scale = ((float)UpgradeManager.getUpgradedSpeed(zombieType, zombieSpeed)/(float)ZombieStats.getHighestSpeed());
+		speed.setScaleX(5*scale); //(zombieHealth/ZombieStats.getHighestHealth())
+		return speed;
+	}
+	
+	private static Button getSelectZombieButton()
+    {
+    	if (selectZombie == null) {
+    		selectZombie = new Button(getSkin());
+    		selectZombie.add("Select Zombie");
+            selectZombie.setColor(Color.GREEN);
+    		selectZombie.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    SpawnMenu.changeSpawnType(selectedZombieType);
+                    disable();
+                }
+        	});
+    	}
+    	return selectZombie;
+    }
+	
+	private static Button getExitButton()
+    {
+    	if (exitButton == null) {
+    		exitButton = new Button(getSkin());
+            exitButton.add("Exit");
+            
+            exitButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disable();
+                    ZTypeMiniScreen.enable();
+                }
+        	});
+    	}
+    	return exitButton;
+    }
+	
+	private static Button getUpgradeButton()
+    {
+    	if (upgradeButton == null) {
+    		upgradeButton = new Button(getSkin());
+    		upgradeButton.add("Upgrades");
+            upgradeButton.setColor(Color.BLUE);
+    		upgradeButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disable();
+                    ZombieCustomUpgrade.createCustomUpgrade(selectedZombieType, zName, zTexture, zombieStats);
+                }
+        	});
+    	}
+    	return upgradeButton;
+    }
+}

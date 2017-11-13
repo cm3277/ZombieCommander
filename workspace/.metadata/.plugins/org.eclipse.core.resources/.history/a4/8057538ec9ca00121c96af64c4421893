@@ -1,0 +1,137 @@
+package com.me.tyrian.Helper.Audio;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.utils.Disposable;
+import com.me.tyrian.Tyrian;
+import com.me.tyrian.Helper.Audio.LRUCache.CacheEntryRemovedListener;
+import com.me.tyrian.Helper.Audio.SoundManager.SoundEffects;
+
+
+
+/**
+ * A service that manages the sound effects.
+ */
+public class SoundManager implements CacheEntryRemovedListener<SoundEffects,Sound>, Disposable
+{
+    /**
+     * The available sound files.
+     */
+    public enum SoundEffects
+    {
+        GUNSHOT( "sound/GunShot.wav" ),
+        SNIPERGUNSHOT( "sound/Sniper.wav" ),
+        FLESH1( "sound/Flesh1.wav" ),
+        FLESH2( "sound/Flesh2.wav" ),
+        FLESH3( "sound/Flesh3.wav" ),
+        ZOMBIEMOAN1( "sound/ZombieMoan1.wav" ),
+        ZOMBIEMOAN2( "sound/ZombieMoan2.wav" );
+
+        private final String fileName;
+
+        private SoundEffects(
+            String fileName )
+        {
+            this.fileName = fileName;
+        }
+
+        public String getFileName()
+        {
+            return fileName;
+        }
+    }
+
+    /*/**
+     * The volume to be set on the sound.
+     */
+    /*private float volume = 1f;
+
+    /**
+     * Whether the sound is enabled.
+     */
+    /*private boolean enabled = true;
+
+    /**
+     * The sound cache.
+     */
+    private static LRUCache<SoundEffects,Sound> soundCache;
+
+    /**
+     * Creates the sound manager.
+     */
+    public SoundManager()
+    {
+        soundCache = new LRUCache<SoundManager.SoundEffects,Sound>( 10 );
+        soundCache.setEntryRemovedListener( this );
+    }
+
+    /**
+     * Plays the specified sound.
+     */
+    public static void play(SoundEffects sound, float volume )
+    {
+
+        // try and get the sound from the cache
+        Sound soundToPlay = soundCache.get( sound );
+        if( soundToPlay == null ) {
+            FileHandle soundFile = Gdx.files.internal( sound.getFileName() );
+            soundToPlay = Gdx.audio.newSound( soundFile );
+            soundCache.add( sound, soundToPlay );
+        }
+
+        // play the sound
+        //Gdx.app.log( Tyrian.LOG, "Playing sound: " + sound.name() );
+        if( volume < 0 || volume > 1f ) {
+        	volume = 1f;
+        }
+        soundToPlay.play( volume );
+    }
+
+    /**
+     * Sets the sound volume which must be inside the range [0,1].
+     */
+    /*public void setVolume(
+        float volume )
+    {
+        Gdx.app.log( Tyrian.LOG, "Adjusting sound volume to: " + volume );
+
+        // check and set the new volume
+        if( volume < 0 || volume > 1f ) {
+            throw new IllegalArgumentException( "The volume must be inside the range: [0,1]" );
+        }
+        this.volume = volume;
+    }*/
+
+    /**
+     * Enables or disabled the sound.
+     */
+    /*public void setEnabled(
+        boolean enabled )
+    {
+        this.enabled = enabled;
+    }*/
+
+    // EntryRemovedListener implementation
+
+    @Override
+    public void notifyEntryRemoved(
+    		SoundEffects key,
+        Sound value )
+    {
+        Gdx.app.log( Tyrian.LOG, "Disposing sound: " + key.name() );
+        value.dispose();
+    }
+
+    /**
+     * Disposes the sound manager.
+     */
+    public void dispose()
+    {
+        Gdx.app.log( Tyrian.LOG, "Disposing sound manager" );
+        for( Sound sound : soundCache.retrieveAll() ) {
+            sound.stop();
+            sound.dispose();
+        }
+    }
+}

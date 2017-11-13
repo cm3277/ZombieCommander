@@ -1,0 +1,25 @@
+package com.me.tyrian.Helper;
+
+import android.app.Activity;
+
+/**
+ * This class handles the game services ONLY on android
+ */
+
+public class GameServices {
+	
+	private static boolean isAndroid = false;
+	private Activity androidActivity;
+	
+	public GameServices(Activity androidActivity)
+	{
+		this.androidActivity = androidActivity;
+		isAndroid = true;
+	}
+	
+	public static boolean getIsAndroid()
+	{
+		return isAndroid;
+	}
+
+}

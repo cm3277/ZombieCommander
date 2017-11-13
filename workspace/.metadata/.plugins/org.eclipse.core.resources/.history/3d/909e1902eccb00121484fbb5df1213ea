@@ -1,0 +1,155 @@
+package com.me.tyrian.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.JustMoser.ZombieCommander.Helper.UpgradeManager;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+
+public class HunterZombie extends Zombie{
+	
+	//do class type and in zombie create stuff!
+	private static int CLASSTYPE = 11;
+	private static int startHealth = 500;
+	private static int damage = 0;//arrows do the damage
+	private Rectangle rangeBox;
+	private float rangeDimension = 120;
+	private static float rangeStartDimension = 120;
+	private boolean inRange = false;
+	private static int speed = 50;
+	//firing
+	private float bulletCounter = 0f;
+	private float bulletDelay = 0.8f;
+	//animation
+	private static Array<AtlasRegion> zombieRegions;
+	private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+	private static Animation walkAnimation;
+
+	public HunterZombie(Array<AtlasRegion> animationRegions, float x, float y) {
+		super(animationRegions, x, y);
+		setClassType(CLASSTYPE);
+		setHealth(startHealth);
+		setSpeed(MathUtils.random(40, 60));
+		setDamage(damage);
+		//custom upgrades
+		this.rangeDimension = UpgradeManager.getUpgradedCustom(CLASSTYPE, this.rangeDimension);
+	}
+	
+	public static HunterZombie create(float x, float y)
+    {
+		if (zombieRegions == null) {
+			zombieRegions = getZombieAtlas().findRegions( "Hunter");
+		}
+		if (walkAnimation == null) {
+			walkAnimation = new Animation( 0.3f, zombieRegions );
+		}
+		if (zombieAnimDrawables == null) {
+    		zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieRegions ) {
+    			zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+
+        // create the ship
+		return new HunterZombie(zombieRegions, x, y);
+    }
+	
+	private Rectangle getRangeBox()
+	{
+		if (rangeBox == null){
+			rangeBox = new Rectangle();
+		}
+		return rangeBox;
+	}
+	
+	@Override
+	public void animateZombie(float delta)
+	{
+		if (getMoving()){
+			TextureRegion frame;
+			frame = walkAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(zombieAnimDrawables.get(frame));
+		}
+	}
+	
+	@Override
+	public void createDeadBody()
+	{
+		getStage().addActor(DeadBody.create(CLASSTYPE, getX(), getY(), getRotation()));
+	}
+	
+	@Override
+	public void setZombieTarget(float x, float y)
+	{
+		super.setZombieTarget(x, y);
+		getRangeBox().set(x + rangeDimension/2, y + rangeDimension/2, rangeDimension, rangeDimension);
+		inRange = false;
+	}
+	
+	@Override
+    public void publicAct(float delta )
+    {
+		super.publicAct(delta);
+		if (!inRange)
+			checkTargetRange();
+		else if (this.isEnemyTarget()){
+			fire();
+		}
+		if (bulletCounter <= bulletDelay)
+			bulletCounter += delta;
+    }
+	
+	private void checkTargetRange()
+	{
+		if (rangeBox != null){
+			if (this.getRect().overlaps(rangeBox)){
+				inRange = true;
+				this.setCanMove(false);
+			}
+			else{
+				if (inRange)
+					inRange = false;
+				if (!getCanMove())
+					setCanMove(true);
+			}
+		}
+	}
+	
+	private void fire()
+	{
+		if (bulletCounter >= bulletDelay){
+			Arrow arrow = Arrow.create(this.getX() + this.getWidth()/2, this.getY() + this.getHeight()/2);
+			arrow.setRotation(getRotation());
+			getStage().addActor(arrow);
+			bulletCounter = 0;
+		}
+	}
+	
+	public static int getStartHealth()
+	{
+		return startHealth;
+	}
+	
+	public static int getDamage()
+	{
+		return damage;
+	}
+	
+	public static int getSpeed()
+	{
+		return speed;
+	}
+	
+	public static float getRangeStartDimension()
+	{
+		return rangeStartDimension;
+	}
+
+}

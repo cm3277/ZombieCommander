@@ -1,0 +1,370 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import com.JustMoser.ZombieCommander.Helper.ClassType;
+import com.JustMoser.ZombieCommander.Helper.RoundHelper;
+import com.JustMoser.ZombieCommander.Helper.ZombieStats;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Button;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.Align;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+
+public class ZTypeMiniScreen extends AbstractImage{
+
+	 public ZTypeMiniScreen() {
+		 super();
+		// TODO Auto-generated constructor stub
+	}
+
+	private static Table selectTable;
+	private static Image background;
+	private static Image walkerSelect;
+	private static TextureRegion walkerSelectRegion;
+	private static Image meatHeadSelect;
+	private static TextureRegion meatHeadSelectRegion;
+	private static Image bangerSelect;
+	private static TextureRegion bangerSelectRegion;
+	private static Image assassinSelect;
+	private static TextureRegion assassinSelectRegion;
+	private static Image spiderSelect;
+	private static TextureRegion spiderSelectRegion;
+	private static Image batSelect;
+	private static TextureRegion batSelectRegion;
+	private static Image riderSelect;
+	private static TextureRegion riderSelectRegion;
+	private static Image hunterSelect;
+	private static TextureRegion hunterSelectRegion;
+	private static Image healWitchSelect;
+	private static TextureRegion healWitchSelectRegion;
+	private static Button exitButton;
+	private static TextureRegion smallBrainRegion;
+	
+	//finish adding in banger zombie to selection spawn menu and spawner !
+	
+	public static void enable()
+	{
+		getBackgroundImage().setVisible(true);
+		getBackgroundImage().toFront();
+		getSelectTable().setVisible(true);
+		getSelectTable().toFront();
+		RoundHelper.getTopTable().toFront();
+	}
+	
+	public static void disable()
+	{
+		getBackgroundImage().setVisible(false);
+		getSelectTable().setVisible(false);
+	}
+	
+	private static Image getBackgroundImage()
+    {
+    	if (background == null) {
+    		background = new Image(getMenuBackgroundRegion());
+    		background.setVisible(true);
+    		//background.setColor(Color.BLACK);
+    		background.setFillParent(true);
+    	}
+    	if (!getStaticStage().getActors().contains(background, true)){
+			getStaticStage().addActor(background);
+		}
+    	return background;
+    }
+	
+	private static Table getSelectTable()
+    {
+        //if( selectTable == null ) {
+        	selectTable = new Table(getSkin());
+        	selectTable.setVisible(false);
+        	selectTable.setFillParent(true);
+        	selectTable.add("").row();
+            //Table Title
+        	selectTable.add("Zombie Types").spaceBottom(25).colspan(6).row();
+        	//First Row
+        	selectTable.add(getWalkerSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getMeatHeadSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getBangerSelectImage()).spaceTop(50).colspan(2).row();
+        	//First Row - Prices
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getZombie()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getMeatHead()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getBanger()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50).row();
+        	//First Row - Brains
+        	//selectTable.add(getNewBrainImage()).align(Align.top);
+        	//selectTable.add(getNewBrainImage()).align(Align.top);
+        	//selectTable.add(getNewBrainImage()).align(Align.top).row();
+        	//Second Row
+        	selectTable.add(getAssassinSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getBatSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getSpiderSelectImage()).spaceTop(50).colspan(2).row();
+        	//Second Row - Prices
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getAssassin()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getBat()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getSpider()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50).row();
+        	//Third Row
+        	selectTable.add(getRiderSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getHunterSelectImage()).spaceRight(50).spaceTop(50).colspan(2);
+        	selectTable.add(getWitchSelectImage()).spaceTop(50).colspan(2).row();
+        	//Third Row - Prices
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getRider()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getHunter()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50);
+        	selectTable.add(getNewPriceLabel(ZombieStats.getZombiePrice(ClassType.getHealWitch()))).align(Align.left).spaceRight(5);
+        	selectTable.add(getNewBrainImage()).align(Align.left).spaceRight(50).row();
+        	//
+        	selectTable.add(getSelectExitButton()).fill().space(50).colspan(6);
+       // }
+        if (!getStaticStage().getActors().contains(selectTable, true)){
+			getStaticStage().addActor(selectTable);
+		}
+            return selectTable;
+    }
+	
+	private static Label getNewPriceLabel(int price)
+	{
+		Label priceLabel = new Label("Price: " + price, getSkin());
+		priceLabel.setColor(Color.RED);
+		priceLabel.setFontScale(RoundHelper.getFontScale(18));
+		return priceLabel;
+	}
+	
+	public static TextureRegion getSmallBrainRegion()
+	{
+		if (smallBrainRegion == null){
+			smallBrainRegion = getZombieAtlas().findRegion( "SmallBrain");
+		}
+		return smallBrainRegion;
+	}
+	
+	public static void loadAssets()
+	{
+		//if (smallBrainRegion == null){
+			smallBrainRegion = getZombieAtlas().findRegion( "SmallBrain");
+			walkerSelectRegion = getZombieAtlas().findRegion("WalkerSelect");
+		//}
+	}
+	
+	private static Image getNewBrainImage()
+	{
+		Image brain = new Image(getSmallBrainRegion());
+		//brain.setScale((float)(1/3));
+		return brain;
+	}
+	
+	private static Image getWalkerSelectImage()
+    {
+    	if (walkerSelect == null) {
+    		
+    		walkerSelect = new Image(walkerSelectRegion);
+    		
+    		//button listener
+            walkerSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getZombie());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getZombie(), "Walker", 
+                    		walkerSelectRegion, Zombie.getStartHealth(), Zombie.getDamage(), Zombie.getSpeed());
+                }
+        	});
+    	}
+    	return walkerSelect;
+    }
+	
+	private static Image getMeatHeadSelectImage()
+    {
+    	if (meatHeadSelect == null) {
+    		meatHeadSelectRegion = getZombieAtlas().findRegion("MeatHeadSelect");
+    		meatHeadSelect = new Image(meatHeadSelectRegion);
+    		
+    		meatHeadSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getMeatHead());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getMeatHead(), "MeatHead", 
+                    		meatHeadSelectRegion, MeatHeadZombie.getStartHealth(), MeatHeadZombie.getDamage(), MeatHeadZombie.getSpeed());
+                }
+        	});
+    	}
+    	return meatHeadSelect;
+    }
+	
+	private static Image getBangerSelectImage()
+    {
+    	if (bangerSelect == null) {
+    		bangerSelectRegion = getZombieAtlas().findRegion("BangerSelect");
+    		bangerSelect = new Image(bangerSelectRegion);
+    		
+    		bangerSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getBanger());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getBanger(), "Banger", 
+                    		bangerSelectRegion, BangerZombie.getStartHealth(), BangerZombie.getDamage(), BangerZombie.getSpeed());
+                }
+        	});
+    	}
+    	return bangerSelect;
+    }
+	
+	private static Image getAssassinSelectImage()
+    {
+    	if (assassinSelect == null) {
+    		assassinSelectRegion = getZombieAtlas().findRegion("AssassinSelect");
+    		assassinSelect = new Image(assassinSelectRegion);
+    		
+    		assassinSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getAssassin());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getAssassin(), "Assassin", 
+                    		assassinSelectRegion, AssassinZombie.getStartHealth(), AssassinZombie.getDamage(), AssassinZombie.getSpeed());
+                }
+        	});
+    	}
+    	return assassinSelect;
+    }
+	
+	private static Image getSpiderSelectImage()
+    {
+    	if (spiderSelect == null) {
+    		spiderSelectRegion = getZombieAtlas().findRegion("SpiderSelect");
+    		spiderSelect = new Image(spiderSelectRegion);
+    		
+    		spiderSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getSpider());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getSpider(), "Spider Queen", 
+                    		spiderSelectRegion, SpiderZombie.getStartHealth(), SpiderZombie.getDamage(), SpiderZombie.getSpeed());
+                }
+        	});
+    	}
+    	return spiderSelect;
+    }
+	
+	private static Image getBatSelectImage()
+    {
+    	if (batSelect == null) {
+    		batSelectRegion = getZombieAtlas().findRegion("HellBatsSelect");
+    		batSelect = new Image(batSelectRegion);
+    		
+    		batSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getBat());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getBat(), "Hell Bats", 
+                    		batSelectRegion, BatZombie.getStartHealth(), BatZombie.getDamage(), BatZombie.getSpeed());
+                }
+        	});
+    	}
+    	return batSelect;
+    }
+	
+	private static Image getRiderSelectImage()
+    {
+    	if (riderSelect == null) {
+    		riderSelectRegion = getZombieAtlas().findRegion("RiderSelect");
+    		riderSelect = new Image(riderSelectRegion);
+    		
+    		riderSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getRider());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getRider(), "Wolf Rider", 
+                    		riderSelectRegion, RiderZombie.getStartHealth() + GrayZombie.getStartHealth(), RiderZombie.getDamage(), RiderZombie.getSpeed());
+                }
+        	});
+    	}
+    	return riderSelect;
+    }
+	
+	private static Image getHunterSelectImage()
+    {
+    	if (hunterSelect == null) {
+    		hunterSelectRegion = getZombieAtlas().findRegion("HunterSelect");
+    		hunterSelect = new Image(hunterSelectRegion);
+    		
+    		hunterSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getHunter());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getHunter(), "Hunter", 
+                    		hunterSelectRegion, HunterZombie.getStartHealth(), Arrow.getDamage(), HunterZombie.getSpeed());
+                }
+        	});
+    	}
+    	return hunterSelect;
+    }
+	
+	private static Image getWitchSelectImage()
+    {
+    	if (healWitchSelect == null) {
+    		healWitchSelectRegion = getZombieAtlas().findRegion("WitchSelect");
+    		healWitchSelect = new Image(healWitchSelectRegion);
+    		
+    		healWitchSelect.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    //SpawnMenu.changeSpawnType(ClassType.getHunter());
+                    ZTypeMiniScreen.disable();
+                    ZombieUpgradeScreen.createUpgradeScreen(ClassType.getHealWitch(), "Healing Witch", 
+                    		healWitchSelectRegion, HealWitchZombie.getStartHealth(), HealWitchZombie.getDamage(), HealWitchZombie.getSpeed());
+                }
+        	});
+    	}
+    	return healWitchSelect;
+    }
+	
+	private static Button getSelectExitButton()
+    {
+    	if (exitButton == null) {
+    		exitButton = new Button(getSkin());
+            exitButton.add("Exit");
+            
+            exitButton.addListener(new ClickListener() {
+        		@Override
+        		public void touchUp(InputEvent event,float x,float y,int pointer,int button)
+                {
+                    super.touchUp( event, x, y, pointer, button );
+                    disable();
+                }
+        	});
+    	}
+    	return exitButton;
+    }
+}

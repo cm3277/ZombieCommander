@@ -1,0 +1,152 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.Json.Serializable;
+import com.badlogic.gdx.utils.JsonValue;
+import com.swarmconnect.SwarmAchievement;
+
+public class AchievementManager implements Serializable{
+	
+	private static int numZombiesSpawned[];
+	private static int NOOBZOMBIES = 3;
+	private static int MASTERZOMBIES = 100;
+	private static boolean levelPackNoob[];
+	private static boolean levelPackMaster[];
+	private static boolean unlockedZombie[];
+	
+	public enum Achievements
+    {
+        WALKER_NOOB( "CgkIy4Tiks4TEAIQAQ" ),
+        WALKER_MASTER( "CgkIy4Tiks4TEAIQAg" ),
+        MEATHEAD_NOOB( "CgkIy4Tiks4TEAIQAw" ),
+        MEATHEAD_MASTER( "CgkIy4Tiks4TEAIQBA" ),
+        BANGER_NOOB( "CgkIy4Tiks4TEAIQBQ" ),
+        BANGER_MASTER( "CgkIy4Tiks4TEAIQBg" ),
+        ASSASSIN_NOOB( "CgkIy4Tiks4TEAIQBw" ),
+        ASSASSIN_MASTER( "CgkIy4Tiks4TEAIQCA" ),
+        BAT_NOOB( "CgkIy4Tiks4TEAIQCQ" ),
+        BAT_MASTER( "CgkIy4Tiks4TEAIQCg" ),
+        SPIDER_NOOB( "CgkIy4Tiks4TEAIQCw" ),
+        SPIDER_MASTER( "CgkIy4Tiks4TEAIQDA" ),
+        RIDER_NOOB( "CgkIy4Tiks4TEAIQDQ" ),
+        RIDER_MASTER( "CgkIy4Tiks4TEAIQDg" ),
+        HUNTER_NOOB( "CgkIy4Tiks4TEAIQDW" ),
+        HUNTER_MASTER( "CgkIy4Tiks4TEAIQEA" ),
+        WITCH_NOOB( "CgkIy4Tiks4TEAIQEQ" ),
+        WITCH_MASTER( "CgkIy4Tiks4TEAIQEg" ),
+        SLAYER_BN( "CgkIy4Tiks4TEAIQEw" ),
+        SLAYER_BM( "CgkIy4Tiks4TEAIQFA" ),
+        SLAYER_AN( "CgkIy4Tiks4TEAIQFQ" ),
+        SLAYER_AM( "CgkIy4Tiks4TEAIQFg" ),
+        SND_BN( "CgkIy4Tiks4TEAIQFw" ),
+        SND_BM( "CgkIy4Tiks4TEAIQGA" ),
+        SND_AN( "CgkIy4Tiks4TEAIQGQ" ),
+        SND_AM( "CgkIy4Tiks4TEAIQGg" ),
+        CTF_BN( "CgkIy4Tiks4TEAIQGw" ),
+        CTF_BM( "CgkIy4Tiks4TEAIQHA" ),
+        CTF_AN( "CgkIy4Tiks4TEAIQHQ" ),
+        CTF_AM( "CgkIy4Tiks4TEAIQHg" );
+
+        private final String appId;
+
+        private Achievements(
+            String appId )
+        {
+            this.appId = appId;
+        }
+
+        public String getAppId()
+        {
+            return appId;
+        }
+    }
+	
+	public AchievementManager()
+	{
+		numZombiesSpawned = new int[] {0,0,0,0,0,0,0,0,0,0,0,0,0};
+		levelPackNoob = new boolean[] {false, false, false, false, false, false};
+		levelPackMaster = new boolean[] {false, false, false, false, false, false};
+		unlockedZombie = new boolean[] {false, true, false, false, false, false, false, false, false, false, false, false, false};
+	}
+	
+	public static void unlockZombie(int zombieType)
+	{
+		unlockedZombie[zombieType] = true;
+	}
+	
+	public static boolean getUnlockedZombie(int zombieType)
+	{
+		return unlockedZombie[zombieType];
+	}
+	
+	public static void unlockLevelPackMaster(int packId)
+	{
+		levelPackMaster[packId] = true;
+		//unlock achievement
+	}
+	
+	public static boolean getLevelPackMaster(int packId)
+	{
+		return levelPackMaster[packId];
+	}
+	
+	public static void unlockLevelPackNoob(int packId)
+	{
+		levelPackNoob[packId] = true;
+		//unlock achievement
+	}
+	
+	public static boolean getLevelPackNoob(int packId)
+	{
+		return levelPackNoob[packId];
+	}
+	
+	public static void addZombiesSpawned(int zombieType)
+	{
+		numZombiesSpawned[zombieType]++;
+		if (numZombiesSpawned[zombieType] == NOOBZOMBIES){
+			//unlock noob achievement
+			if (zombieType == ClassType.getZombie())
+				SwarmAchievement.unlock(14394);
+		}
+		else if (numZombiesSpawned[zombieType] == MASTERZOMBIES){
+			//unlock master 
+		}
+	}
+	
+	public static int getNumZombiesSpawned(int zombieType)
+	{
+		return numZombiesSpawned[zombieType];
+	}
+	
+	public static int getNumNoobZombies()
+	{
+		return NOOBZOMBIES;
+	}
+	
+	public static int getNumMasterZombies()
+	{
+		return MASTERZOMBIES;
+	}
+	
+	// Serializable implementation 
+    @Override
+    public void read(Json json, JsonValue jsonData )
+    {
+        // read the some basic properties
+    	numZombiesSpawned = json.readValue( "numZombiesSpawned", int[].class, jsonData );
+    	levelPackNoob = json.readValue( "levelPackNoob", boolean[].class, jsonData );
+    	levelPackMaster = json.readValue( "levelPackMaster", boolean[].class, jsonData );
+    	unlockedZombie = json.readValue( "unlockedZombie", boolean[].class, jsonData );
+    }
+ 
+    @Override
+    public void write(Json json )
+    {
+        json.writeValue( "numZombiesSpawned", numZombiesSpawned );
+        json.writeValue( "levelPackNoob", levelPackNoob );
+        json.writeValue( "levelPackMaster", levelPackMaster );
+        json.writeValue( "unlockedZombie", unlockedZombie );
+    }
+
+}

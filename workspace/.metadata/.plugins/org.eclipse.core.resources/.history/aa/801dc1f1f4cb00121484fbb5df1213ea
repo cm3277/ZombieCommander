@@ -1,0 +1,137 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+import com.google.android.gms.appstate.AppStateClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.games.GamesClient;
+import com.google.android.gms.plus.PlusClient;
+import com.google.example.games.basegameutils.GameHelper;
+
+import android.app.Activity;
+import android.content.Intent;
+
+/**
+ * This class handles the game services ONLY on android
+ */
+
+public class GameServices implements GameHelper.GameHelperListener{
+	
+	protected GameHelper mHelper;
+
+    // We expose these constants here because we don't want users of this class
+    // to have to know about GameHelper at all.
+    public static final int CLIENT_GAMES = GameHelper.CLIENT_GAMES;
+    public static final int CLIENT_APPSTATE = GameHelper.CLIENT_APPSTATE;
+    public static final int CLIENT_PLUS = GameHelper.CLIENT_PLUS;
+    public static final int CLIENT_ALL = GameHelper.CLIENT_ALL;
+
+    // Requested clients. By default, that's just the games client.
+    protected int mRequestedClients = CLIENT_GAMES;
+	
+	private static boolean isAndroid = false;
+	private Activity androidActivity;
+	
+	public GameServices(Activity androidActivity)
+	{
+		this.androidActivity = androidActivity;
+		isAndroid = true;
+		mHelper = new GameHelper(androidActivity);
+		mHelper.setup(this, mRequestedClients);
+	}
+	
+	public static boolean getIsAndroid()
+	{
+		return isAndroid;
+	}
+	
+	//activity implementation
+	//@Override
+    public void onStart() {
+        mHelper.onStart(androidActivity);
+    }
+
+    //@Override
+    public void onStop() {
+        //super.onStop();
+        mHelper.onStop();
+    }
+
+    //@Override
+    public void onActivityResult(int request, int response, Intent data) {
+        //super.onActivityResult(request, response, data);
+        mHelper.onActivityResult(request, response, data);
+    }
+    
+    protected GamesClient getGamesClient() {
+        return mHelper.getGamesClient();
+    }
+
+    protected AppStateClient getAppStateClient() {
+        return mHelper.getAppStateClient();
+    }
+
+    protected PlusClient getPlusClient() {
+        return mHelper.getPlusClient();
+    }
+
+    protected boolean isSignedIn() {
+        return mHelper.isSignedIn();
+    }
+
+    protected void beginUserInitiatedSignIn() {
+        mHelper.beginUserInitiatedSignIn();
+    }
+
+    protected void signOut() {
+        mHelper.signOut();
+    }
+
+    protected void showAlert(String title, String message) {
+        mHelper.showAlert(title, message);
+    }
+
+    protected void showAlert(String message) {
+        mHelper.showAlert(message);
+    }
+
+    protected void enableDebugLog(boolean enabled, String tag) {
+        mHelper.enableDebugLog(enabled, tag);
+    }
+
+    protected String getInvitationId() {
+        return mHelper.getInvitationId();
+    }
+
+    protected void reconnectClients(int whichClients) {
+        mHelper.reconnectClients(whichClients);
+    }
+
+    protected String getScopes() {
+        return mHelper.getScopes();
+    }
+
+    protected boolean hasSignInError() {
+        return mHelper.hasSignInError();
+    }
+
+    protected ConnectionResult getSignInError() {
+        return mHelper.getSignInError();
+    }
+
+    protected void setSignInMessages(String signingInMessage, String signingOutMessage) {
+        mHelper.setSigningInMessage(signingInMessage);
+        mHelper.setSigningOutMessage(signingOutMessage);
+    }
+
+	@Override
+	public void onSignInFailed() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSignInSucceeded() {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

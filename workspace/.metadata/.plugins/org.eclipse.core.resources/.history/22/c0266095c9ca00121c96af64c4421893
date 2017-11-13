@@ -1,0 +1,963 @@
+package com.me.tyrian.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+import com.me.tyrian.Helper.ClassType;
+import com.me.tyrian.Helper.LevelManager;
+import com.me.tyrian.Helper.RoundHelper;
+import com.me.tyrian.Helper.UpgradeManager;
+import com.me.tyrian.Helper.ZombieStats;
+import com.me.tyrian.Helper.Audio.SoundManager;
+import com.me.tyrian.Helper.Audio.SoundManager.SoundEffects;
+import com.me.tyrian.ImageActors.Blockers.Blocker;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.rotateTo;
+
+public class Zombie extends AbstractImage{ //Slayer, Search and Destroy, ctf
+	
+	private int CLASSTYPE = 1;
+	public float walkStateTime = 0;
+	private float attackStateTime = 0;
+	private Rectangle recTarget;
+	private Rectangle body;
+	private float moveSpeed;
+	private float baseSpeed;
+	private static int speed = 50;
+	//rotation
+	private float rotateSpeed = 0.5f;
+	private float rotationTarget = 0;
+	private float isRotatingCounter = 0.5f;
+	//collisions
+	private float isStuckDelay = 0.5f;
+	private float isStuckCounter = 0f;
+	private boolean isStuck = false;
+	private boolean isBlocked = false;
+	private boolean outOfBounds = false;
+	private boolean canMove = true;
+	private Polygon polyBody;
+	private boolean checkedOutOfBounds = false;
+	//targets
+	private boolean isSelected = false;
+	private boolean isAlive = true;
+	private boolean humanTarget = false;
+	private int humanTargetNum = 0;
+	private boolean blockerTarget = false;
+	private int blockerTargetNum = 0;
+	private Array<Vector2> zombieTargetArray;
+	private int targetArrayNum = 0;
+	private boolean hasNextTarget = true;
+	private boolean flagTarget = false;
+	private boolean flagStandTarget = false;
+	private boolean rotateDirection = false;
+	private boolean slowReversed = false;
+	private float slowRotateInterval = 2f;
+	//health
+	private static int zombieStartHealth = 400;
+	private int startHealth = 400;
+	private int health = 400;
+	private boolean isHealing = false;
+	private float healTimer = 0f;
+	private static float healDelay = 2f;
+	private static float healAmount = 50;
+	private int healCircles = 0;
+	private float healMultiplier = 1.2f;
+	private boolean shortShield = false;
+	private float shortShieldDelay = 2.5f;
+	private float shortShieldTimer = 0f;
+	private int whiteGreenFadeNum = 0;
+	private float whiteGreenFadeTimer = 0f;
+	private float whiteGreenFadeDelay = 0.2f;
+	//sounds
+	private float moanSoundTimer = 0f;
+	private static float moanSoundDelay = 0.7f;
+	//damage
+	private float damageDelay = 1;
+	private float damageCounter = 1f;
+	private static int zombieDamage = 100;
+	private int damage = 100;
+	private boolean isDisguised = false;
+	//upgrades 
+	private boolean upgraded = false;
+	//animation help 
+	private boolean isMoving = false;
+	private static Array<AtlasRegion> zombieRegions;
+	private static Array<AtlasRegion> zombieAttackRegions;
+	private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+    private static Map<TextureRegion,Drawable> zombieAttackAnimDrawables;
+    private static Animation walkAnimation;
+	private static Animation attackAnimation;
+
+	public Zombie(Array<AtlasRegion> animationRegions, float x, float y) {
+		super(animationRegions.get(0));
+		zombieTargetArray = new Array<Vector2>();
+		zombieTargetArray.ordered = true;
+		body = new Rectangle(x,y, getWidth()*0.8f,getHeight()*0.8f);
+		recTarget = new Rectangle(0,0,ZombieTarget.getTargetImage().getWidth(), ZombieTarget.getTargetImage().getHeight() );
+		this.setOrigin(getWidth()/2, getHeight()/2);
+		this.setX(x);
+		this.setY(y);
+		baseSpeed = MathUtils.random(40, 60);
+		//checkSpawnOutOfBounds();
+	}
+	
+	public static Zombie create(int classType, float x, float y)
+	    {
+	        // load all the regions of our ship in the image atlas
+			//determine type of zombie to spawn
+			if (ClassType.isMeatHead(classType)){
+				return MeatHeadZombie.create(x, y);
+			}
+			else if (ClassType.isBanger(classType)){
+				return BangerZombie.create(x, y);
+			}
+			else if (ClassType.isAssassin(classType)){
+				return AssassinZombie.create(x, y);
+			}
+			else if (ClassType.isSpider(classType)){
+				return SpiderZombie.create(x, y);
+			}
+			else if (ClassType.isBat(classType)){
+				return BatZombie.create(x, y);
+			}
+			else if (ClassType.isRider(classType)){
+				return RiderZombie.create(x, y);
+			}
+			else if (ClassType.isHunter(classType)){
+				return HunterZombie.create(x, y);
+			}
+			else if (ClassType.isHealWitch(classType)){
+				return HealWitchZombie.create(x, y);
+			}
+			else {
+				if (zombieRegions == null) {
+					loadAnimation();
+				}
+	
+		        // create the ship
+				return new Zombie(zombieRegions, x, y);
+			}
+	    }
+	
+	private static void loadAnimation()
+	{
+		if (zombieRegions == null) {
+			zombieRegions = getZombieAtlas().findRegions( "ZombieWalk");
+		}
+		if (zombieAttackRegions == null) {
+    		zombieAttackRegions = getZombieAtlas().findRegions( "ZombieAttack");
+    	}
+		if (zombieAnimDrawables == null) {
+    		zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieRegions ) {
+    			zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+		if (zombieAttackAnimDrawables == null) {
+    		zombieAttackAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieAttackRegions ) {
+    			zombieAttackAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+		if (walkAnimation == null) {
+			walkAnimation = new Animation( 0.18f, zombieRegions );
+		}
+		if (attackAnimation == null) {
+			attackAnimation = new Animation( 0.18f, zombieAttackRegions );
+		}
+	}
+
+		
+	@Override
+    public void publicAct(float delta )
+    {
+		if (isAlive){
+			if (!checkedOutOfBounds){
+				checkSpawnOutOfBounds();
+				checkedOutOfBounds = true;
+			}
+			if (!upgraded){
+				doUpgrades();
+			}
+			this.animateZombie(delta);
+			this.move(delta);
+			this.checkTarget();
+			this.checkHeal(delta);
+			if (moanSoundTimer <= moanSoundDelay)
+				moanSoundTimer += delta;
+		}
+		else{
+			getZombieArray().removeValue(this, true);
+		}
+    }
+	
+	private void doUpgrades()
+	{
+		//this.health = MathUtils.roundPositive((float) (this.health * (Math.pow(UpgradeManager.getUpgradePercent(), UpgradeManager.getHealthUpgrade(CLASSTYPE)))));
+		this.health = UpgradeManager.getUpgradedHealth(CLASSTYPE, this.health);
+		this.damage = UpgradeManager.getUpgradedDamage(CLASSTYPE, this.damage);
+		this.baseSpeed = UpgradeManager.getUpgradedSpeed(CLASSTYPE, (int)this.baseSpeed);
+		upgraded = true;
+	}
+	
+	public void animateZombie(float delta)
+	{
+		TextureRegion frame;
+		if(isMoving){
+			frame = walkAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(zombieAnimDrawables.get(frame));
+		}
+		else {
+			frame = attackAnimation.getKeyFrame( attackStateTime += delta, true );
+			setDrawable(zombieAttackAnimDrawables.get(frame));
+		}
+	}
+	
+	private void move(float delta)
+	{
+		if (recTarget.x != 0 && recTarget.y != 0)
+		{
+			moveSpeed = baseSpeed * delta;
+			//collision detection
+			if (!isBlocked && !isStuck && !outOfBounds && isStuckCounter >= isStuckDelay)
+				rotateZombie();
+			else if (isStuck || isBlocked || outOfBounds){
+				if (isMoving){
+					slowRotate();
+					isStuckCounter = 0f;
+				}
+			}
+			else
+				isStuckCounter += delta;
+			//check to see if zombie reached target yet + move
+			if (!body.overlaps(recTarget)){
+				if (canMove){
+					body.y -= moveSpeed * Math.sin((getRotation()-90)*(Math.PI / 180));
+					body.x -= moveSpeed * Math.cos((getRotation()-90)*(Math.PI / 180));
+					if (!isMoving)
+					isMoving = true;
+				}
+				else
+					isMoving = false;
+			}
+			else{
+				if (isMoving)
+					isMoving = false;
+				damageCounter += delta;
+				if (humanTarget){
+						if (humanTargetNum < getHumanArray().size){
+							if (body.overlaps(getHumanArray().get(humanTargetNum).getRect())){
+								damage(true, humanTargetNum);
+							}
+						}
+						else
+							humanTarget = false;
+				}
+				else if (blockerTarget){
+						if (blockerTargetNum < getBlockersArray().size){
+							if (body.overlaps(getBlockersArray().get(blockerTargetNum).getRect())){
+								damage(false, blockerTargetNum);
+							}
+						}
+						else{
+							blockerTarget = false;
+						}
+				}
+				else if (hasNextTarget){
+					nextTarget();
+				}
+			}
+		}
+		//check if a zombie is in the spot we want to move to
+		if (!ClassType.isBat(CLASSTYPE))
+			checkZombieCollision();
+		else
+			checkBatCollision();
+		checkOutOfBounds();
+		//check for blockers
+		checkBlocker();
+		//Update rotation Counter 
+		isRotatingCounter += delta;
+		
+		//move at 100 pixels/second
+		//body.y += 100 * delta;
+		//if(body.y > 800)
+		//	body.y = 0;
+		//update real position
+		this.setY(body.y);
+		this.setX(body.x);
+	}
+	
+	private void checkHeal(float delta)
+	{
+		if (isHealing || shortShield){
+			whiteGreenFade(delta);
+			if (healTimer < healDelay){
+				healTimer += delta;
+			}
+			else if (heal()){
+				healTimer = 0f;
+			}
+			if (shortShield){
+				if (shortShieldTimer <= shortShieldDelay){
+					shortShieldTimer += delta;
+				}
+				else{
+					shortShield = false;
+				}
+			}
+		}
+		else if (this.getColor() != Color.WHITE && !isSelected){
+			this.setColor(Color.WHITE);
+		}
+	}
+	
+	private void whiteGreenFade(float delta)
+	{
+		//do zombie green fade in and out while healing
+		if (whiteGreenFadeNum == 0){
+			if (this.getColor() != Color.GREEN)
+				this.setColor(Color.GREEN);
+		}
+		if (whiteGreenFadeNum == 1){
+			if (this.getColor() != Color.WHITE && !isSelected)
+				this.setColor(Color.WHITE);
+			else if (isSelected && this.getColor() != Color.BLUE)
+				this.setColor(Color.BLUE);
+		}
+		if (whiteGreenFadeTimer <= whiteGreenFadeDelay)
+			whiteGreenFadeTimer += delta;
+		else{
+			if (whiteGreenFadeNum < 1)
+				whiteGreenFadeNum++;
+			else
+				whiteGreenFadeNum = 0;
+			
+			whiteGreenFadeTimer = 0f;
+		}
+	}
+	
+	private boolean heal()
+	{
+		if (health < startHealth + 1){
+			health += healAmount + (healCircles * healMultiplier);
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	public void damage(boolean human, int identifier)
+	{	
+		if (damageCounter >= damageDelay){
+			damageCounter = 0f;
+			if (human && (identifier >= 0 && identifier < getHumanArray().size)){
+				Human humanToHurt = getHumanArray().get(identifier);
+				this.getStage().addActor(Brain.create(humanToHurt.getX() + humanToHurt.getWidth()/2,
+						humanToHurt.getY() + humanToHurt.getHeight()/2, this.damage/10, true));
+				humanToHurt.hurt(damage);
+			}
+			else if (!human && identifier >= 0 && identifier < getBlockersArray().size){
+				Blocker blockerToHurt = getBlockersArray().get(identifier);
+				this.getStage().addActor(Brain.create(blockerToHurt.getX() + blockerToHurt.getWidth()/2,
+						blockerToHurt.getY() + blockerToHurt.getHeight()/2, this.damage/10, true));
+				blockerToHurt.hurt(damage);
+			}
+		}
+	}
+	
+	public void setTargetArray(Array<Vector2> targets)
+	{
+		zombieTargetArray.clear();
+		for (Vector2 vector: targets){
+			zombieTargetArray.add(vector);
+		}
+		targetArrayNum = -1;
+		hasNextTarget = true;
+		nextTarget();
+	}
+	
+	public void copyTargetArray(Array<Vector2> targets)
+	{
+		zombieTargetArray.clear();
+		for (Vector2 vector: targets){
+			zombieTargetArray.add(vector);
+		}
+		hasNextTarget = true;
+		nextTarget();
+	}
+	
+	private void nextTarget()
+	{
+		if (targetArrayNum + 1 >= zombieTargetArray.size){
+			hasNextTarget = false;
+		}
+		else{
+			targetArrayNum++;
+			Vector2 coordinates = zombieTargetArray.get(targetArrayNum);
+			setZombieTarget(coordinates.x, coordinates.y);
+		}
+	}
+	
+	public void setZombieTarget(float x, float y)
+	{
+		recTarget.set(x, y, ZombieTarget.getTargetImage().getWidth(), ZombieTarget.getTargetImage().getHeight());
+		rotateZombie();
+		humanTarget = false;
+		blockerTarget = false;
+		flagTarget = false;
+		flagStandTarget = false;
+		rotateDirection = false;
+		slowReversed = false;
+	}
+	
+	public Array<Vector2> getTargetArray()
+	{
+		return zombieTargetArray;
+	}
+	
+	public float getTargetX()
+	{
+		return recTarget.getX();
+	}
+	
+	public float getTargetY()
+	{
+		return recTarget.getY();
+	}
+	
+	private void checkSpawnOutOfBounds()
+	{
+		//x bounds
+		if (this.getX() - 5 < 0)
+			this.setX(7);
+		else if (this.getX() + this.getWidth() + 5 > Gdx.app.getGraphics().getWidth())
+			this.setX(Gdx.app.getGraphics().getWidth() - this.getWidth() - 7);
+		//y bounds
+		else if (this.getY() - 5 < 0)
+			this.setY(7);
+		else if (this.getY() + this.getHeight() + 5 > Gdx.app.getGraphics().getHeight() - 30)
+			this.setY(Gdx.app.getGraphics().getHeight() - this.getHeight() - 37);
+	}
+	
+	private void checkOutOfBounds()
+	{
+		//x bounds
+		if (body.getX() < 0)
+			setOutOfBounds();
+		else if (body.getX() + this.getWidth() > Gdx.app.getGraphics().getWidth())
+			setOutOfBounds();
+		//y bounds
+		else if (body.getY() < 0)
+			setOutOfBounds();
+		else if (body.getY() + this.getHeight() > Gdx.app.getGraphics().getHeight() - 30)
+			setOutOfBounds();
+		else if (outOfBounds)
+			outOfBounds = false;
+			
+	}
+	
+	private void setOutOfBounds()
+	{
+		body.x = getX();
+		body.y = getY();
+		outOfBounds = true;
+		if (isBlocked && rotateDirection && !slowReversed){
+			slowRotateInterval = -slowRotateInterval;
+			slowReversed = true;
+		}
+	}
+	
+	private void checkZombieCollision()
+	{
+		//check if a zombie is in the spot we want to move to
+		for (Zombie z2 : getZombieArray()){
+				if(this != z2 && z2.getAlive() && !ClassType.isBat(z2.getClassType())){
+					if (z2.getRect().overlaps(body)){
+						double myDist = Math.sqrt(Math.pow(z2.getX() - this.body.x, 2) + Math.pow(z2.getY() - this.body.y, 2));
+						double otherDist = Math.sqrt(Math.pow(z2.getRect().getX() - this.getX(), 2) + Math.pow(z2.getRect().getY() - this.getY(), 2));
+						if (myDist < otherDist){
+							body.x = getX();
+							body.y = getY();
+							isStuck = true;
+							break;
+						}
+					}
+					else if (isStuck){
+						isStuck = false;
+					}
+				}
+				else if (isStuck){
+					isStuck = false;
+				}
+		}
+	}
+	
+	private void checkBatCollision()
+	{
+		for (Zombie z2 : getZombieArray()){
+			if(this != z2 && z2.getAlive() && ClassType.isBat(z2.getClassType())){
+				if (z2.getRect().overlaps(body)){
+					double myDist = Math.sqrt(Math.pow(z2.getX() - this.body.x, 2) + Math.pow(z2.getY() - this.body.y, 2));
+					double otherDist = Math.sqrt(Math.pow(z2.getRect().getX() - this.getX(), 2) + Math.pow(z2.getRect().getY() - this.getY(), 2));
+					if (myDist < otherDist){
+						body.x = getX();
+						body.y = getY();
+						isStuck = true;
+						break;
+					}
+				}
+				else if (isStuck){
+					isStuck = false;
+				}
+			}
+		}
+	}
+	
+	private void checkBlocker()
+	{
+		//check to see if blocker is in spot we want to move to
+		for (Blocker blocker : getBlockersArray()){
+			if (blockerTarget && !humanTarget){
+				if (blockerTargetNum < getBlockersArray().size)
+				if (getBlockersArray().get(blockerTargetNum) != blocker){
+					if (blocker.isBrickWall()){
+						if (Intersector.overlapConvexPolygons(blocker.getPolygon(), this.getPolygonBody())){
+							if (blocker.getPolygon().contains(body.x, body.y) || blocker.getPolygon().contains(body.x + body.width, body.y)
+									|| blocker.getPolygon().contains(body.x + body.width, body.y + body.height) || blocker.getPolygon().contains(body.x, body.y + body.width)){
+								blockZombie();
+								break;
+							}
+						}
+						else if (isBlocked)
+							isBlocked = false;
+					}
+					else if (blocker.getRect().overlaps(body)){
+						blockZombie();
+						break;
+					}
+					else if (isBlocked)
+						isBlocked = false;
+				}
+			}
+			else{
+				if (blocker.isBrickWall()){
+					if (Intersector.overlapConvexPolygons(blocker.getPolygon(), this.getPolygonBody())){
+						if (blocker.getPolygon().contains(body.x, body.y) || blocker.getPolygon().contains(body.x + body.width, body.y)
+								|| blocker.getPolygon().contains(body.x + body.width, body.y + body.height) || blocker.getPolygon().contains(body.x, body.y + body.width)){
+							blockZombie();
+							break;
+						}
+					}
+					else if (isBlocked)
+						isBlocked = false;
+				}
+				if (blocker.getRect().overlaps(body)){
+					blockZombie();
+					break;
+				}
+				else if (isBlocked)
+					isBlocked = false;
+			}
+		}
+	}
+	
+	public void blockZombie()
+	{
+		body.x = getX();
+		body.y = getY();
+		isBlocked = true;
+	}
+	
+	private void rotateZombie()
+	{
+		if (isRotatingCounter >= 0.5){
+			if (!flagTarget)
+				rotationTarget = calcAngle(body.x, body.y, recTarget.x + recTarget.width/2, recTarget.y + recTarget.height/2);
+			else
+				rotationTarget = calcAngle(body.x, body.y, recTarget.x, recTarget.y);
+			this.addAction(rotateTo(-rotationTarget, rotateSpeed));
+			isRotatingCounter = 0f;
+		}
+		//Gdx.app.log( Tyrian.LOG, "SetRotation: " + -rotationAngle );
+	}
+	
+	private void checkTarget()
+	{
+		if (recTarget.x != 0 && recTarget.y != 0){
+			checkBlockerTarget();
+			if (!blockerTarget){
+				if (!humanTarget && !blockerTarget){
+					if (getHumanArray().size > 0){
+						humanTargetNum = -1;
+						for (Human human: getHumanArray()){
+							humanTargetNum++;
+							if (recTarget.overlaps(human.getRect())){
+								recTarget.set(human.getRect());
+								humanTarget = true;
+								break;
+							}
+						}
+					}
+					if (RoundHelper.getGameTypeId() == LevelManager.getCaptureTheFlag())
+						checkFlagTarget();
+				}
+				else if (!blockerTarget){
+					if (humanTargetNum >= 0 && humanTargetNum < getHumanArray().size){
+						if (!getHumanArray().get(humanTargetNum).getAlive())
+							humanTarget = false;
+						else if (!compareRect(recTarget, getHumanArray().get(humanTargetNum).getRect()))
+							humanTarget = false;
+							//recTarget = getHumanArray().get(humanTargetNum).getRect();
+					}
+					else
+						humanTarget = false;
+				}
+			}
+		}
+	}
+	
+	private void checkFlagTarget()
+	{
+		if (!flagTarget){
+			if (!getFlag().getIsCarried()){
+				if (recTarget.overlaps(getFlag().getRect())){
+					recTarget.set(getFlag().getRect());
+					recTarget.width = recTarget.width*0.7f;
+					recTarget.height = recTarget.height*0.7f;
+					flagTarget = true;
+				}
+			}
+			if (!flagStandTarget){
+				if (recTarget.overlaps(getZombieFlagStand().getRect())){
+					recTarget.set(getZombieFlagStand().getRect());
+					recTarget.width = recTarget.width*0.7f;
+					recTarget.height = recTarget.height*0.7f;
+					flagStandTarget = true;
+				}
+			}
+		}
+	}
+	
+	private void checkBlockerTarget()
+	{
+		if (CLASSTYPE != ClassType.getBat()){
+			if (!blockerTarget){
+				if (getBlockersArray().size > 0){
+					blockerTargetNum = -1;
+					for (Blocker blocker: getBlockersArray()){
+						blockerTargetNum++;
+						if (recTarget.overlaps(blocker.getRect()) && blocker.getAlive() && !blocker.isBrickWall()){
+							recTarget.set(blocker.getRect());
+							blockerTarget = true;
+							break;
+						}
+					}
+				}
+			}
+			else{
+				if (blockerTargetNum >= 0 && blockerTargetNum < getBlockersArray().size){
+					if (!getBlockersArray().get(blockerTargetNum).getAlive())
+						blockerTarget = false;
+					else if (!compareRect(recTarget, getBlockersArray().get(blockerTargetNum).getRect()))
+						blockerTarget = false;
+						//recTarget = getBlockersArray().get(blockerTargetNum).getRect();
+				}
+				else
+					blockerTarget = false;
+			}
+		}
+	}
+	
+	private static boolean compareRect(Rectangle rect1, Rectangle rect2)
+	{
+		//returns true if same for our purposes
+		if ((rect1.getX() == rect2.getX()) && (rect1.getY() == rect2.getY())){
+			return true;
+		}
+		else
+			return false;
+	}
+	
+	public boolean getAlive()
+	{
+		return isAlive;
+	}
+	
+	private void slowRotate()
+	{
+		if (!rotateDirection){
+			if (rotationTarget != 0){
+				if (-rotationTarget > this.getRotation())
+					slowRotateInterval = 2f;
+				else
+					slowRotateInterval = -2f;
+				rotateDirection = true;
+			}
+		}	
+		this.setRotation(getRotation() + slowRotateInterval);
+	}
+	
+	public Rectangle getRect()
+	{
+		return body;
+	}
+	
+	public void selectZombie()
+	{
+		this.setColor(Color.BLUE);
+		isSelected = true;
+	}
+	
+	public void deSelectZombie()
+	{
+		colorZombie();
+		isSelected = false;
+	}
+	
+	public void colorZombie()
+	{
+		this.setColor(Color.WHITE);
+	}
+	
+	public boolean getSelected()
+	{
+		return isSelected;
+	}
+	
+	public void addHealCircle()
+	{
+		healCircles++;
+		isInHealCircle();
+	}
+	
+	public void minusHealCircle()
+	{
+		if (healCircles > 0)
+			healCircles--;
+		if (healCircles <= 0)
+			leftHealCircle();//fix y zombie still heals
+	}
+	
+	private void isInHealCircle()
+	{
+		isHealing = true;
+		this.setColor(Color.GREEN);
+	}
+	
+	private void leftHealCircle()
+	{
+		isHealing = false;
+		shortShield = true;
+		shortShieldTimer = 0f;
+		this.setColor(Color.WHITE);
+		if (healCircles != 0)
+			healCircles = 0;
+	}
+	
+	public boolean isHealing()
+	{
+		return isHealing;
+	}
+	
+	public void hurt(int damage)
+	{
+		//blood splatter 
+		if (isAlive){
+			getStage().addActor(Blood.create(getX(),  getY(),  getRotation()));
+			playFleshSound();
+			boolean moanPlayed = false;
+			if (MathUtils.random(3) == 1){
+				playMoanSound();
+				moanPlayed = true;
+			}
+			health -= damage;
+			if (health <= 0){
+				createDeadBody();
+				if (!moanPlayed)
+					playMoanSound();
+				destroy();
+			}
+		}
+		else{
+			getZombieArray().removeValue(this, true);
+		}
+	}
+	
+	private void playMoanSound()
+	{
+		if (moanSoundTimer > moanSoundDelay){
+			int moanSound = MathUtils.random(1);
+			if (moanSound == 0){
+				SoundManager.play(SoundEffects.ZOMBIEMOAN1, 0.7f);
+			}
+			else if (moanSound == 1){
+				SoundManager.play(SoundEffects.ZOMBIEMOAN2, 0.7f);
+			}
+			moanSoundTimer = 0f;
+		}
+	}
+	
+	private void playFleshSound()
+	{
+		int fleshSound = MathUtils.random(2);
+		if (fleshSound == 0){
+			SoundManager.play(SoundEffects.FLESH1, 1f);
+		}
+		else if (fleshSound == 1){
+			SoundManager.play(SoundEffects.FLESH2, 1f);
+		}
+		else if (fleshSound == 2){
+			SoundManager.play(SoundEffects.FLESH3, 1f);
+		}
+	}
+	
+	public void createDeadBody()
+	{
+		getStage().addActor(DeadBody.create(CLASSTYPE, getX(), getY(), getRotation()));
+	}
+	
+	public void destroy()
+	{
+		//drop brain on death!
+		if (ClassType.isZombie(CLASSTYPE)){
+			this.getStage().addActor(Brain.createLow(this.getX() + this.getWidth()/2,
+					this.getY() + this.getHeight()/2, 1, true, false));
+		}
+		else{
+			this.getStage().addActor(Brain.create(this.getX() + this.getWidth()/2,
+				this.getY() + this.getHeight()/2, ZombieStats.getZombiePrice(CLASSTYPE)*(1/5), true));
+		}
+		isAlive = false;
+		getZombieArray().removeValue(this, true);
+		this.remove();
+	}
+	
+	public boolean getMoving()
+	{
+		return isMoving;
+	}
+	
+	public void setHealth(int health)
+	{
+		this.health = health;
+		this.startHealth = health;
+	}
+	
+	public int getHealth()
+	{
+		return this.health;
+	}
+	
+	public void setSpeed(int speed)
+	{
+		this.baseSpeed = speed;
+	}
+	
+	public void setDamage(int damage)
+	{
+		this.damage = damage;
+	}
+	
+	public int getClassType()
+	{
+		return CLASSTYPE;
+	}
+	
+	public void setClassType(int type)
+	{
+		CLASSTYPE = type;
+	}
+	
+	public boolean getDisguised()
+	{
+		return isDisguised;
+	}
+	
+	public void setDisguised(boolean disguised)
+	{
+		isDisguised = disguised;
+	}
+	
+	public void setBody(Rectangle newBody)
+	{
+		body = newBody;
+	}
+	
+	public static Array<AtlasRegion> getWalkerRegions()
+	{
+		if (zombieRegions == null) {
+			loadAnimation();
+		}
+		return zombieRegions;
+	}
+	
+	public void setCanMove(boolean move)
+	{
+		canMove = move; //finish hunter movement
+	}
+	
+	public boolean getCanMove()
+	{
+		return canMove;
+	}
+	
+	public boolean isEnemyTarget()
+	{
+		if (blockerTarget || humanTarget)
+			return true;
+		else
+			return false;
+	}
+	
+	public static int getStartHealth()
+	{
+		return zombieStartHealth;
+	}
+	
+	public static int getDamage()
+	{
+		return zombieDamage;
+	}
+	
+	public static int getSpeed()
+	{
+		return speed;
+	}
+	
+	public int getTargetArrayNum()
+	{
+		return targetArrayNum;
+	}
+	
+	public void setTargetArrayNum(int num)
+	{
+		targetArrayNum = num;
+	}
+	
+	private Polygon getPolygonBody()
+	{
+		if (polyBody == null){
+			polyBody = new Polygon(new float[]{0,0,body.getWidth(),0,body.getWidth(),body.getHeight(),0,body.getHeight()});
+			polyBody.setOrigin(body.getWidth()/2, body.getHeight()/2);
+		}
+		polyBody.setPosition(body.getX(), body.getY());
+		polyBody.setRotation(this.getRotation());
+		return polyBody;
+	}
+	
+	
+}

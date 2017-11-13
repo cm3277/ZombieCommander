@@ -1,0 +1,66 @@
+package com.JustMoser.ZombieCommander.Screens.Levels.CtF.Pack1;
+
+import com.JustMoser.ZombieCommander.Tyrian;
+import com.JustMoser.ZombieCommander.Helper.LevelManager;
+import com.JustMoser.ZombieCommander.ImageActors.Flag;
+import com.JustMoser.ZombieCommander.ImageActors.FlagStand;
+import com.JustMoser.ZombieCommander.ImageActors.HumanTeleporter;
+import com.JustMoser.ZombieCommander.ImageActors.ZombieSpawn;
+import com.JustMoser.ZombieCommander.ImageActors.Blockers.BrickWall;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+
+public class CtFPack1Level3 extends CtFLevel
+{
+	private ZombieSpawn zombieSpawn;
+	//private Human localHuman;
+	
+    public CtFPack1Level3(Tyrian game)
+    {
+        super( game, LevelManager.getLevelId(3));
+    }
+    
+    @Override
+    public void onShow()
+    {
+        addSpawns();
+        addBlockers();
+        addHumans();
+        addFlags();
+    }
+    
+    private void addHumans()
+    {
+    	stage.addActor(HumanTeleporter.createSniper(Gdx.app.getGraphics().getWidth()*0.01f, Gdx.app.getGraphics().getHeight()*0.9f));
+    	stage.addActor(HumanTeleporter.createMachineGunner(Gdx.app.getGraphics().getWidth()*0.05f, Gdx.app.getGraphics().getHeight()*0.8f));
+    }
+    
+    public void addSpawns()
+    {
+    	zombieSpawn = ZombieSpawn.create(new Vector2(Gdx.app.getGraphics().getWidth()*0.1f,Gdx.app.getGraphics().getHeight()*0.13f));
+        stage.addActor(zombieSpawn);
+    }
+   
+    private void addBlockers()
+    {
+    	//stage.addActor(Sandbag.create(Gdx.app.getGraphics().getWidth()*0.6f, Gdx.app.getGraphics().getHeight()*0.75f ));
+    	//stage.addActor(Sandbag.create(Gdx.app.getGraphics().getWidth()*0.8f, Gdx.app.getGraphics().getHeight()*0.65f ));
+    	//brick wall
+    	stage.addActor(BrickWall.create(Gdx.app.getGraphics().getWidth()*0.1f , Gdx.app.getGraphics().getHeight()*0.3f));
+    	BrickWall brickWall2 = BrickWall.create(Gdx.app.getGraphics().getWidth()*0.3f , Gdx.app.getGraphics().getHeight()*0.25f);
+    	brickWall2.setRotation(-45);
+    	stage.addActor(brickWall2);
+    }
+    
+    private void addFlags()
+    {
+    	//Human flagStand
+    	FlagStand flagStand = FlagStand.createHumanStand(Gdx.app.getGraphics().getWidth()*0.17f, Gdx.app.getGraphics().getHeight()*0.8f);
+    	stage.addActor(flagStand);
+    	//flag
+    	Flag flag = Flag.create(flagStand.getX() + flagStand.getWidth()/2, flagStand.getY() + flagStand.getHeight()/2);
+    	stage.addActor(flag);
+    	//Zombie Flagstand
+    	stage.addActor(FlagStand.createZombieStand(Gdx.app.getGraphics().getWidth()*0.75f, Gdx.app.getGraphics().getHeight()*0.1f));
+    }
+}

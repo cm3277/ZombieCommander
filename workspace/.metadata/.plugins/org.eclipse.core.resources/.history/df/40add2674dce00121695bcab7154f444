@@ -1,0 +1,235 @@
+package com.JustMoser.ZombieCommander.Helper;
+
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.Json.Serializable;
+import com.badlogic.gdx.utils.JsonValue;
+
+public class LevelManager implements Serializable{
+	
+	//private static int LEVEL1 = 0;
+	private static boolean slayerPack1Levels[]; 
+	private static boolean sndPack1Levels[]; 
+	private static boolean ctfPack1Levels[]; 
+	private static boolean slayerPack2Levels[];
+	private static boolean sndPack2Levels[];
+	private static boolean ctfPack2Levels[];
+	private static boolean tutorial[];
+	private static int slayerPack1Id = 0;
+	private static int sndPack1Id = 1;
+	private static int ctfPack1Id = 2;
+	private static int slayerPack2Id = 3;
+	private static int sndPack2Id = 4;
+	private static int ctfPack2Id = 5;
+	private static int slayer = 0;
+	private static int searchAndDestroy = 1;
+	private static int captureTheFlag = 2;
+	
+	public LevelManager()
+	{
+		slayerPack1Levels = new boolean[] {true, false, false, false, false};
+		sndPack1Levels = new boolean[] {true, false, false, false, false};
+		ctfPack1Levels = new boolean[] {true, false, false, false, false};
+		slayerPack2Levels = new boolean[] {true, false, false, false, false};
+		sndPack2Levels = new boolean[] {true, false, false, false, false};
+		ctfPack2Levels = new boolean[] {true, false, false, false, false};
+		tutorial = new boolean[] {false, false, false};
+	}
+	
+	public static int getSlayer()
+	{
+		return slayer;
+	}
+	
+	public static int getSlayerPackId(int pack)
+	{
+		if (pack == 1)
+			return slayerPack1Id;
+		else if (pack == 2)
+			return slayerPack2Id;
+		else
+			return 0;
+	}
+	
+	public static int getSearchAndDestroy()
+	{
+		return searchAndDestroy;
+	}
+	
+	public static int getCaptureTheFlag()
+	{
+		return captureTheFlag;
+	}
+	
+	public static int getSearchAndDestroyPackId(int pack)
+	{
+		if (pack == 1)
+			return sndPack1Id;
+		else if (pack == 2)
+			return sndPack2Id;
+		else
+			return 0;
+	}
+	
+	public static int getCaptureTheFlagPackId(int pack)
+	{
+		if (pack == 1)
+			return ctfPack1Id;
+		else if (pack == 2)
+			return ctfPack2Id;
+		else
+			return 0;
+	}
+	
+	public static int getPackId(int gameType, int pack)
+	{
+		if (gameType == slayer){
+			return getSlayerPackId(pack);
+		}
+		else if (gameType == captureTheFlag){
+			return getCaptureTheFlagPackId(pack);
+		}
+		else return getSearchAndDestroyPackId(pack);
+	}
+	
+	public static boolean getLevel(int gameType, int pack, int levelId)
+	{
+		if (gameType == slayer){
+			if (pack == slayerPack1Id)
+				return slayerPack1Levels[levelId];
+			else
+				return slayerPack2Levels[levelId];
+		}
+		else if (gameType == searchAndDestroy){
+			if (pack == sndPack1Id)
+				return sndPack1Levels[levelId];
+			else
+				return sndPack2Levels[levelId];
+		}
+		else if (gameType == captureTheFlag){
+			if (pack == ctfPack1Id)
+				return ctfPack1Levels[levelId];
+			else
+				return ctfPack2Levels[levelId];
+		}
+		else
+			return false;
+	}
+	
+	public static boolean hasNextLevel(int gameType, int pack, int level)
+	{
+		if (gameType == slayer){
+			if (pack == getPackId(gameType, 1)){
+				if (slayerPack1Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			else if  (pack == getPackId(gameType, 2)){
+				if (slayerPack2Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		else if (gameType == searchAndDestroy){
+			if (pack == getPackId(gameType, 1)){
+				if (sndPack1Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			if (pack == getPackId(gameType, 2)){
+				if (sndPack2Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		else if (gameType == captureTheFlag){
+			if (pack == getPackId(gameType, 1)){
+				if (ctfPack1Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			if (pack == getPackId(gameType, 2)){
+				if (ctfPack2Levels.length >= level + 1)
+					return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+		else
+			return false;
+	}
+	
+	public static void unlockLevel(int gameType, int pack, int levelId)
+	{
+		if (gameType == slayer){
+			if (pack == getPackId(gameType, 1))
+				slayerPack1Levels[levelId] = true;
+			else if (pack == getPackId(gameType, 2))
+				slayerPack2Levels[levelId] = true;
+		}
+		else if (gameType == searchAndDestroy){
+			if (pack == getPackId(gameType, 1))
+				sndPack1Levels[levelId] = true;
+			else if (pack == getPackId(gameType, 2))
+				sndPack2Levels[levelId] = true;
+		}
+		else if (gameType == captureTheFlag){
+			if (pack == getPackId(gameType, 1))
+				ctfPack1Levels[levelId] = true;
+			else if (pack == getPackId(gameType, 2))
+				ctfPack2Levels[levelId] = true;
+		}
+	}
+	
+	public static int getLevelId(int levelNum)
+	{
+		return levelNum -= 1;
+	}
+	
+	public static boolean getTutorial(int gameType)
+	{
+		return tutorial[gameType];
+	}
+	
+	public static void setTutorialFinished(int gameType)
+	{
+		tutorial[gameType] = true;
+	}
+	
+	// Serializable implementation 
+    @Override
+    public void read(Json json, JsonValue jsonData )
+    {
+        // read the some basic properties
+    	slayerPack1Levels = json.readValue( "slayerPack1Levels", boolean[].class, jsonData );
+    	sndPack1Levels = json.readValue( "sndPack1Levels", boolean[].class, jsonData );
+    	ctfPack1Levels = json.readValue( "ctfPack1Levels", boolean[].class, jsonData );
+    	slayerPack2Levels = json.readValue( "slayerPack2Levels", boolean[].class, jsonData );
+    	sndPack2Levels = json.readValue( "sndPack2Levels", boolean[].class, jsonData );
+    	ctfPack2Levels = json.readValue( "ctfPack2Levels", boolean[].class, jsonData );
+    	tutorial = json.readValue( "tutorial", boolean[].class, jsonData );
+    }
+ 
+    @Override
+    public void write(Json json )
+    {
+        json.writeValue( "slayerPack1Levels", slayerPack1Levels );
+        json.writeValue( "sndPack1Levels", sndPack1Levels );
+        json.writeValue( "ctfPack1Levels", ctfPack1Levels );
+        json.writeValue( "slayerPack2Levels", slayerPack2Levels );
+        json.writeValue( "sndPack2Levels", sndPack2Levels );
+        json.writeValue( "ctfPack2Levels", ctfPack2Levels );
+        json.writeValue( "tutorial", tutorial );
+    }
+
+}

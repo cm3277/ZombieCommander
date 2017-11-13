@@ -1,0 +1,78 @@
+package com.JustMoser.ZombieCommander.ImageActors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Array;
+
+public class MiniSpider extends Zombie{
+	
+	//do class type and in zombie create stuff!
+	private static int CLASSTYPE = 7;
+	private static int startHealth = 200;
+	private static int damage = 50;
+	//animation
+	private static Array<AtlasRegion> zombieRegions;
+	private static Map<TextureRegion,Drawable> zombieAnimDrawables;
+	private static Animation walkAnimation;
+
+	public MiniSpider(Array<AtlasRegion> animationRegions, float x, float y, float rotation, Array<Vector2> targetArray, int targetNum) 
+	{
+		super(animationRegions, x, y);
+		setRotation(rotation);
+		setClassType(CLASSTYPE);
+		setHealth(startHealth);
+		setSpeed(MathUtils.random(80, 110));
+		setDamage(damage);
+		setBody(new Rectangle(this.getX(), this.getY(), this.getWidth()*1.5f, this.getHeight()*1.5f));
+		getZombieArray().add(this);
+		setTargetArrayNum(targetNum);
+		this.copyTargetArray(targetArray);
+	}
+	
+	public static MiniSpider create(float x, float y, float rotation, Array<Vector2> targetArray, int targetNum)
+    {
+		if (zombieRegions == null) {
+			zombieRegions = getZombieAtlas().findRegions( "MiniSpider");
+		}
+		if (walkAnimation == null) {
+			walkAnimation = new Animation( 0.2f, zombieRegions );
+		}
+		if (zombieAnimDrawables == null) {
+    		zombieAnimDrawables = new HashMap<TextureRegion,Drawable>();
+    		for( AtlasRegion region : zombieRegions ) {
+    			zombieAnimDrawables.put( region, new TextureRegionDrawable( region ) );
+    		}
+    	}
+		
+        // create the ship
+		return new MiniSpider(zombieRegions, x, y, rotation, targetArray, targetNum);
+    }
+	
+	
+	@Override
+	public void createDeadBody()
+	{
+		getStage().addActor(DeadBody.create(CLASSTYPE, getX(), getY(), getRotation()));
+	}
+	
+	@Override
+	public void animateZombie(float delta)
+	{
+		if (getMoving()){
+			TextureRegion frame;
+			frame = walkAnimation.getKeyFrame( walkStateTime += delta, true );
+			setDrawable(zombieAnimDrawables.get(frame));
+		}
+	}
+	
+
+}
